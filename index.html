@@ -2302,57 +2302,56 @@ function drawScene(ctx, W, H, camX, camY, editMode){
   }
   ctx.restore();
 
-  function origin(tx,ty){ const b=iso(tx*CELL,ty*CELL); return {x:b.x-camX+W/2, y:b.y-camY+H/2}; }
+  function origin(tx,ty){ const b=iso(tx*CELL,ty*CELL); return{x:b.x-camX+W/2,y:b.y-camY+H/2}; }
+  const sorted=[...tiles.values()].sort((a,b)=>(a.tx+a.ty)-(b.tx+b.ty));
 
-  [...tiles.values()].sort((a,b)=>(a.tx+a.ty)-(b.tx+b.ty)).forEach(({tx,ty,cells})=>{
-    const {x:ox,y:oy}=origin(tx,ty);
-    ctx.save();
+  /* ── PASS 1：土層側面 + 草地 SVG（無 clip，允許相互覆蓋，先全部畫完） ── */
+  sorted.forEach(({tx,ty,cells})=>{
+    const{x:ox,y:oy}=origin(tx,ty);
     const C1=iso(CELL,0),C2=iso(CELL,CELL),C3=iso(0,CELL);
-    const hF=tiles.has(TK(tx,ty+1)), hL=tiles.has(TK(tx-1,ty));
+    const hF=tiles.has(TK(tx,ty+1)),hL=tiles.has(TK(tx-1,ty));
     const allGrass=[...cells].every(c=>c===0);
 
-    // ── 草地 SVG 先畫（整塊 336×194，含側面，不 clip）──
-    if(_imgsReady && IMGS.grass){
-      ctx.drawImage(IMGS.grass, ox - HW*CELL, oy, HW*CELL*2, HH*CELL*2 + DEPTH);
-    }
-
-    // ── 土層側面（只補混合地塊，草地 SVG 已含側面）──
+    // 土層側面（混合地塊才補，純草地由 SVG 自帶）
     if(!allGrass){
-      if(!hF){ poly(ctx,[[C1.x,C1.y],[C2.x,C2.y],[C2.x,C2.y+DEPTH],[C1.x,C1.y+DEPTH]],ox,oy,SIDE_R); }
-      if(!hL){ poly(ctx,[[C3.x,C3.y],[C2.x,C2.y],[C2.x,C2.y+DEPTH],[C3.x,C3.y+DEPTH]],ox,oy,SIDE_L); }
+      if(!hF) poly(ctx,[[C1.x,C1.y],[C2.x,C2.y],[C2.x,C2.y+DEPTH],[C1.x,C1.y+DEPTH]],ox,oy,SIDE_R);
+      if(!hL) poly(ctx,[[C3.x,C3.y],[C2.x,C2.y],[C2.x,C2.y+DEPTH],[C3.x,C3.y+DEPTH]],ox,oy,SIDE_L);
       if(!hF&&!hL){
         poly(ctx,[[C2.x,C2.y],[C2.x,C2.y+DEPTH],[C3.x,C3.y+DEPTH]],ox,oy,'#9A6030');
         poly(ctx,[[C2.x,C2.y],[C2.x,C2.y+DEPTH],[C1.x,C1.y+DEPTH]],ox,oy,'#9A6030');
       }
     }
+    // 草地 SVG（整塊 336×194，後方 tile 的草地會蓋住前方的 grass，但 Pass2 再蓋回水/高地）
+    if(_imgsReady&&IMGS.grass) ctx.drawImage(IMGS.grass,ox-HW*CELL,oy,HW*CELL*2,HH*CELL*2+DEPTH);
+  });
 
-    // ── 水 / 高地 格子覆蓋 ──
+  /* ── PASS 2：水格 + 高地（全部草地畫完後再蓋，永遠在草地上方） ── */
+  sorted.forEach(({tx,ty,cells})=>{
+    const{x:ox,y:oy}=origin(tx,ty);
     for(let s=0;s<CELL*2-1;s++){
       for(let col=0;col<CELL;col++){
         const row=s-col; if(row<0||row>=CELL) continue;
-        const ci=cells[row*CELL+col];
-        if(ci===0) continue; // 草地已由整塊 SVG 處理
-
+        const ci=cells[row*CELL+col]; if(ci===0) continue;
         const hl=ci>=2?ci-1:0, rz=hl*HLIFT;
         const P=iso(col,row,rz);
         const topX=ox+P.x, topY=oy+P.y;
-
-        if(ci===1 && _imgsReady && IMGS.water){
-          // 水格：56×28，以頂點為基準
-          ctx.drawImage(IMGS.water, topX-HW, topY, HW*2, HH*2);
-        } else if(ci>=2 && _imgsReady && IMGS.highland){
-          // 高地（逐層疊）：56×36.51
+        if(ci===1&&_imgsReady&&IMGS.water){
+          ctx.drawImage(IMGS.water,topX-HW,topY,HW*2,HH*2);
+        } else if(ci>=2&&_imgsReady&&IMGS.highland){
           for(let l=0;l<hl;l++){
             const lP=iso(col,row,l*HLIFT);
-            const lx=ox+lP.x, ly=oy+lP.y;
-            ctx.drawImage(IMGS.highland, lx-HW, ly-8.51, HW*2, 36.51);
+            ctx.drawImage(IMGS.highland,ox+lP.x-HW,oy+lP.y-8.51,HW*2,36.51);
           }
         }
       }
     }
+  });
 
-    // ── 編輯模式：格線 + 地塊外框 ──
-    if(editMode){
+  /* ── PASS 3（編輯模式）：格線 + 地塊外框 ── */
+  if(editMode){
+    sorted.forEach(({tx,ty,cells})=>{
+      const{x:ox,y:oy}=origin(tx,ty);
+      const C1=iso(CELL,0),C2=iso(CELL,CELL),C3=iso(0,CELL),C0=iso(0,0);
       for(let s=0;s<CELL*2-1;s++){
         for(let col=0;col<CELL;col++){
           const row=s-col; if(row<0||row>=CELL) continue;
@@ -2362,13 +2361,10 @@ function drawScene(ctx, W, H, camX, camY, editMode){
           ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=0.6; ctx.stroke();
         }
       }
-      const C0=iso(0,0);
       ctx.beginPath(); [C0,C1,C2,C3].forEach((c,i)=>i===0?ctx.moveTo(ox+c.x,oy+c.y):ctx.lineTo(ox+c.x,oy+c.y)); ctx.closePath();
       ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1.5; ctx.setLineDash([6,4]); ctx.stroke(); ctx.setLineDash([]);
-    }
-
-    ctx.restore();
-  });
+    });
+  }
 }
 
 /* ── Camera ── */
@@ -2413,40 +2409,8 @@ window.initIslandCanvas = function(){
       if(W>0&&H>0){
         drawScene(hCx,W,H,hCam.x,hCam.y,false);
 
-        // overlay：在物品 HTML 上方疊畫高地前側面
-        if(ovCx){
-          ov.width=W; ov.height=H;
-          ovCx.clearRect(0,0,W,H);
-          function origin(tx,ty){ const b=iso(tx*CELL,ty*CELL); return{x:b.x-hCam.x+W/2,y:b.y-hCam.y+H/2}; }
-          [...tiles.values()].sort((a,b)=>(a.tx+a.ty)-(b.tx+b.ty)).forEach(({tx,ty,cells})=>{
-            const{x:ox,y:oy}=origin(tx,ty);
-            // 畫高地格子的前側面（面向觀察者，row+1 方向 + col-1 方向）
-            for(let s=0;s<CELL*2-1;s++){
-              for(let col=0;col<CELL;col++){
-                const row=s-col; if(row<0||row>=CELL) continue;
-                const ci=cells[row*CELL+col]; if(ci<2) continue;
-                const hl=ci-1, rz=hl*HLIFT;
-                // 前側面：只畫朝向觀察者的面
-                const nFront=row<CELL-1?cells[(row+1)*CELL+col]<2:!tiles.has(TK(tx,ty+1));
-                const nLeft =col>0?cells[row*CELL+(col-1)]<2:!tiles.has(TK(tx-1,ty));
-                const Q=iso(col,row+1,rz),S=iso(col+1,row+1,rz),Q0=iso(col,row+1,0),S0=iso(col+1,row+1,0);
-                const P=iso(col,row,rz),lP=iso(col,row,0),lQ=iso(col,row+1,0);
-                if(nFront){
-                  ovCx.beginPath();
-                  ovCx.moveTo(ox+Q.x,oy+Q.y); ovCx.lineTo(ox+S.x,oy+S.y);
-                  ovCx.lineTo(ox+S0.x,oy+S0.y); ovCx.lineTo(ox+Q0.x,oy+Q0.y);
-                  ovCx.closePath(); ovCx.fillStyle=HIGHLAND_FRONT; ovCx.fill();
-                }
-                if(nLeft){
-                  ovCx.beginPath();
-                  ovCx.moveTo(ox+P.x,oy+P.y); ovCx.lineTo(ox+Q.x,oy+Q.y);
-                  ovCx.lineTo(ox+lQ.x,oy+lQ.y); ovCx.lineTo(ox+lP.x,oy+lP.y);
-                  ovCx.closePath(); ovCx.fillStyle=HIGHLAND_SIDE; ovCx.fill();
-                }
-              }
-            }
-          });
-        }
+        // overlay canvas（高地遮擋層，目前清空待正確實作）
+        if(ovCx){ ov.width=W; ov.height=H; ovCx.clearRect(0,0,W,H); }
       }
       wave+=0.033; hRaf=requestAnimationFrame(loop);
     }
