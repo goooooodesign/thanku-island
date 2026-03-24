@@ -2498,17 +2498,29 @@ function save(){
 }
 
 /* ── 地塊彈跳特效 ── */
-const spawnAnims = new Map(); // TK -> startTime(ms)
-const SPAWN_MS   = 700;
+const spawnAnims  = new Map(); // TK -> startTime(ms) 新增動畫
+const shrinkAnims = new Map(); // TK -> startTime(ms) 消失動畫
+const SPAWN_MS    = 700;
+const SHRINK_MS   = 350;
 
 function spawnTile(k){ spawnAnims.set(k, performance.now()); }
+function shrinkTile(k){ shrinkAnims.set(k, performance.now()); }
 
 function tileScale(k){
+  // 消失動畫中？
+  const t0s = shrinkAnims.get(k);
+  if(t0s != null){
+    const t = Math.min((performance.now()-t0s)/SHRINK_MS, 1);
+    if(t >= 1){ shrinkAnims.delete(k); return null; } // null = 跳過渲染
+    // scale 1 → 1.08 → 0（先微微放大再快速縮小消失）
+    if(t < 0.2) return 1 + t/0.2 * 0.08;
+    return 1.08 * (1 - (t-0.2)/0.8);
+  }
+  // 彈跳出現動畫？
   const t0 = spawnAnims.get(k);
   if(t0 == null) return 1;
   const t = Math.min((performance.now()-t0)/SPAWN_MS, 1);
   if(t >= 1){ spawnAnims.delete(k); return 1; }
-  // Spring: 快速放大 → 兩下反彈 → 穩定
   if(t < 0.28) return t/0.28 * 1.18;
   if(t < 0.46) return 1.18 - (t-0.28)/0.18 * 0.26;
   if(t < 0.62) return 0.92 + (t-0.46)/0.16 * 0.11;
@@ -2535,7 +2547,15 @@ function drawScene(ctx, W, H, camX, camY, editMode){
   ctx.restore();
 
   function origin(tx,ty){ const b=iso(tx*CELL,ty*CELL); return{x:b.x-camX+W/2,y:b.y-camY+H/2}; }
-  const sorted=[...tiles.values()].sort((a,b)=>(a.tx+a.ty)-(b.tx+b.ty));
+  // ghost tiles：正在消失動畫中的地塊（已從 tiles 刪除，但還要渲染）
+  const ghostTiles = [];
+  shrinkAnims.forEach((t0, k) => {
+    if(!tiles.has(k)){
+      const [tx,ty] = k.split(',').map(Number);
+      ghostTiles.push({tx, ty, cells: new Uint8Array(CELL*CELL)});
+    }
+  });
+  const sorted=[...tiles.values(), ...ghostTiles].sort((a,b)=>(a.tx+a.ty)-(b.tx+b.ty));
 
   /* ── PASS 1：土層側面 + 草地 SVG（無 clip，允許相互覆蓋，先全部畫完） ── */
   sorted.forEach(({tx,ty,cells})=>{
@@ -2544,6 +2564,7 @@ function drawScene(ctx, W, H, camX, camY, editMode){
     const hF=tiles.has(TK(tx,ty+1)),hL=tiles.has(TK(tx-1,ty));
     const allGrass=[...cells].every(c=>c===0);
     const k=TK(tx,ty), sc=tileScale(k);
+    if(sc === null) return; // 消失動畫結束，跳過
 
     ctx.save();
     if(sc!==1){
@@ -2568,7 +2589,12 @@ function drawScene(ctx, W, H, camX, camY, editMode){
 
   /* ── PASS 2：水格 + 高地（全部草地畫完後再蓋，永遠在草地上方） ── */
   sorted.forEach(({tx,ty,cells})=>{
+    const k=TK(tx,ty), sc=tileScale(k);
+    if(sc === null || sc === 0) return; // 消失動畫結束，跳過
     const{x:ox,y:oy}=origin(tx,ty);
+    const cx2=ox+iso(CELL/2,CELL/2).x, cy2=oy+iso(CELL/2,CELL/2).y;
+    ctx.save();
+    if(sc!==1){ ctx.translate(cx2,cy2); ctx.scale(sc,sc); ctx.translate(-cx2,-cy2); }
     for(let s=0;s<CELL*2-1;s++){
       for(let col=0;col<CELL;col++){
         const row=s-col; if(row<0||row>=CELL) continue;
@@ -2586,6 +2612,7 @@ function drawScene(ctx, W, H, camX, camY, editMode){
         }
       }
     }
+    ctx.restore();
   });
 
   /* ── PASS 3（編輯模式）：格線 + 地塊外框 ── */
@@ -2729,7 +2756,12 @@ function eDown(e){
   // 純 click 模式：只在 pointerdown 那一瞬間執行，move 不繼續繪製
   const tile=eHitTile(p.x,p.y);
   if(tile){
-    if(tool==='shrink'){ tiles.delete(TK(tile.tx,tile.ty)); save(); return; }
+    if(tool==='shrink'){
+      const k=TK(tile.tx,tile.ty);
+      shrinkTile(k); // 先播消失動畫
+      setTimeout(()=>{ tiles.delete(k); save(); }, SHRINK_MS + 50);
+      return;
+    }
     const cell=eHitCell(p.x,p.y,tile); if(cell){ eApply(tile,cell.col,cell.row,tool); save(); }
   } else if(tool==='expand'){
     const wx=p.x-eCv.width/2+eCam.x, wy=p.y-eCv.height/2+eCam.y;
