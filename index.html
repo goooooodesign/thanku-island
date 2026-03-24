@@ -46,8 +46,8 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             background: #E8DDD0;
-            height: 100vh; width: 100vw;
-            overflow: hidden;
+            min-height: 100vh; min-width: 320px;
+            overflow-x: auto; overflow-y: auto;
             font-family: "M PLUS Rounded 1c", "Noto Sans TC", sans-serif;
             color: var(--text);
             -webkit-tap-highlight-color: transparent;
@@ -59,9 +59,10 @@
         /* ===== 整體框架：左側導航 + 右側內容 ===== */
         .app {
             background: var(--bg);
-            width: 100vw; height: 100vh;
+            width: 100%; min-width: 760px;
+            min-height: 100vh;
             display: flex; flex-direction: row;
-            position: relative; overflow: hidden;
+            position: relative;
         }
 
         /* ===== 左側導航 ===== */
@@ -70,7 +71,9 @@
             background: linear-gradient(180deg, #EFF8F1 0%, #E6F2E8 100%);
             border-right: 2px solid var(--border);
             display: flex; flex-direction: column;
-            height: 100vh; overflow-y: auto; z-index: 30;
+            position: sticky; top: 0; left: 0;
+            height: 100vh; overflow-y: auto;
+            overflow-x: hidden; z-index: 30;
             scrollbar-width: thin; scrollbar-color: var(--border) transparent;
         }
         .sidebar::-webkit-scrollbar { width: 3px; }
@@ -186,7 +189,7 @@
         /* ===== 右側主內容 ===== */
         .content-area {
             flex: 1; display: flex; flex-direction: column;
-            overflow: hidden; height: 100vh;
+            min-height: 100vh; min-width: 0;
             background: var(--bg);
         }
 
@@ -197,7 +200,7 @@
             border-bottom: 2px solid var(--border);
             display: flex; align-items: center;
             padding: 0 36px;
-            z-index: 20;
+            position: sticky; top: 0; z-index: 20;
             box-shadow: var(--shadow-sm);
         }
         .topbar-title { font-size: 17px; font-weight: 800; color: var(--text); }
@@ -216,7 +219,7 @@
 
         /* 主要捲動區 */
         .main {
-            flex: 1; overflow-y: auto; overflow-x: hidden;
+            flex: 1;
             padding: 32px 40px 48px;
             background: var(--bg);
         }
@@ -244,7 +247,7 @@
 
         .island-flat {
             width: 100%;
-            height: calc(100vh - 58px - 52px - 64px);
+            height: calc(100dvh - 58px - 52px - 64px);
             min-height: 400px;
             background: #b3ddff;
             border-radius: var(--radius-lg);
@@ -704,8 +707,9 @@
         /* ══ 島嶼地形編輯器 Tab ══ */
         .island-tab {
             display: flex !important; flex-direction: row;
-            height: calc(100vh - 58px); overflow: hidden;
+            height: calc(100dvh - 58px); overflow: hidden;
             padding: 0 !important;
+            position: sticky; top: 58px;
         }
 
         /* 左側工具欄（桌機） */
@@ -794,7 +798,6 @@
 
         /* ── 手機橫屏 RWD ── */
         @media (max-height: 500px) and (orientation: landscape) {
-            /* 橫屏時縮小側欄，讓主要內容有空間 */
             .sidebar { min-width: 160px; width: 160px; }
             .sidebar-logo { padding: 12px 14px 10px; }
             .sidebar-logo-title { font-size: 14px; }
@@ -802,11 +805,11 @@
             .sidebar-avatar { width: 32px; height: 32px; font-size: 13px; }
             .topbar { height: 44px; padding: 0 20px; }
             .main { padding: 16px 20px 32px; }
-            /* 島嶼在橫屏縮小高度 */
-            .island-flat { height: calc(100vh - 44px - 80px) !important; min-height: 200px; }
+            .island-flat { height: calc(100dvh - 44px - 80px) !important; min-height: 200px; }
         }
 
         @media (max-width: 767px) {
+            .sidebar { width: 180px; }
             .island-tab { flex-direction: column !important; height: calc(100dvh - 44px - 56px) !important; }
             .island-sidebar { display: none; }
             .island-mobile-bar {
@@ -1563,7 +1566,8 @@
                         <div class="sea-info">
                             <div class="sea-name">{{ user.name }}</div>
                             <div class="sea-energy">
-                                <i class="fa-solid fa-bolt"></i> {{ user.energy }} 能量
+                                <i class="fa-regular fa-envelope"></i>
+                                收到 <strong>{{ user.thankCount }}</strong> 封感謝信
                                 <span class="sea-island-tag">🏝️ 的小島</span>
                             </div>
                         </div>
@@ -1717,9 +1721,15 @@ createApp({
             const id = visitingId.value || currentUserId.value;
             return (users.value.find(u => u.id === id) || {}).island || [];
         });
-        const leaderboard = computed(() =>
-            [...users.value].sort((a, b) => b.energy - a.energy)
-        );
+        const leaderboard = computed(() => {
+            // 計算每位使用者收到感謝的次數
+            const countMap = {};
+            users.value.forEach(u => { countMap[u.id] = 0; });
+            letters.value.forEach(l => { if (countMap[l.to] !== undefined) countMap[l.to]++; });
+            return [...users.value]
+                .map(u => ({ ...u, thankCount: countMap[u.id] || 0 }))
+                .sort((a, b) => b.thankCount - a.thankCount);
+        });
 
         // ===== 物品位置統一取得（裝飾品用 item.x/y，動物用 animalStates） =====
         // 說明：item.x/y 和 animalStates.x/y 是「初始 cam 下的螢幕 %」
