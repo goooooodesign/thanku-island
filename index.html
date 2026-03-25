@@ -138,6 +138,72 @@
             transition: all 0.18s; position: relative;
         }
         .inbox-btn:hover { background: rgba(123,174,138,0.15); color: var(--primary-h); }
+
+        /* 反饋按鈕 */
+        .feedback-sidebar-btn {
+            width: 100%; display: flex; align-items: center; gap: 10px;
+            padding: 10px 14px; border-radius: var(--radius);
+            font-size: 13px; font-weight: 700; color: var(--accent);
+            transition: all 0.18s; margin-top: 4px;
+            border: 1.5px dashed rgba(232,168,124,0.5);
+            background: #FFF8F2;
+        }
+        .feedback-sidebar-btn:hover { background: #FFF0E0; border-color: var(--accent); transform: translateX(2px); }
+        .feedback-sidebar-btn i { width: 18px; text-align: center; font-size: 15px; }
+
+        /* 反饋彈窗 */
+        .feedback-modal-overlay {
+            position: fixed; inset: 0; z-index: 800;
+            background: rgba(50,40,30,0.5); backdrop-filter: blur(6px);
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .feedback-modal {
+            background: var(--surface); border-radius: 28px;
+            border: 2px solid var(--border); width: 100%; max-width: 480px;
+            max-height: 90vh; display: flex; flex-direction: column;
+            box-shadow: 0 24px 64px rgba(60,50,40,0.2);
+            animation: popReveal 0.35s cubic-bezier(0.175,0.885,0.32,1.275);
+            overflow: hidden;
+        }
+        .feedback-modal-header {
+            background: linear-gradient(135deg, #FFF4EC, #FFF8F2);
+            padding: 24px 28px 16px; border-bottom: 2px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .feedback-modal-title { font-size: 18px; font-weight: 900; color: var(--text); }
+        .feedback-modal-sub   { font-size: 12px; color: var(--text-sub); margin-top: 3px; font-weight: 500; }
+        .feedback-modal-body  { padding: 20px 28px; overflow-y: auto; flex: 1; }
+        .feedback-preview-img {
+            width: 100%; max-height: 160px; object-fit: cover;
+            border-radius: var(--radius); margin-top: 10px; border: 2px solid var(--border);
+        }
+        .feedback-img-upload {
+            border: 2px dashed var(--border); border-radius: var(--radius);
+            padding: 14px; text-align: center; cursor: pointer;
+            transition: all 0.15s; background: var(--surface-2); margin-top: 10px;
+        }
+        .feedback-img-upload:hover { border-color: var(--accent); background: #FFF8F2; }
+        .feedback-img-hint { font-size: 11px; color: var(--text-sub); margin-top: 4px; }
+        .feedback-submit-btn {
+            width: 100%; padding: 13px; border-radius: var(--radius-pill);
+            border: none; background: var(--accent); color: #fff;
+            font-size: 14px; font-weight: 800; cursor: pointer;
+            transition: all 0.15s; font-family: 'Noto Sans TC', sans-serif;
+            box-shadow: 0 4px 14px rgba(232,168,124,0.4); margin-top: 16px;
+        }
+        .feedback-submit-btn:hover { background: #D4784A; transform: translateY(-1px); }
+        .feedback-submit-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+        /* 反饋送出確認 */
+        .feedback-sent-overlay {
+            position: fixed; inset: 0; z-index: 810;
+            background: linear-gradient(135deg, #FFF4EC, #FFF8F2);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 16px; animation: fadeIn 0.4s ease;
+        }
+        .feedback-sent-icon  { font-size: 72px; animation: sentBounce 0.6s cubic-bezier(0.175,0.885,0.32,1.275); }
+        .feedback-sent-title { font-size: 24px; font-weight: 900; color: var(--accent); letter-spacing: -0.02em; }
+        .feedback-sent-sub   { font-size: 13px; color: var(--text-sub); font-weight: 600; text-align: center; }
         .inbox-btn.active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(123,174,138,0.4); }
         .badge-dot {
             position: absolute; top: 8px; left: 22px;
@@ -1726,6 +1792,10 @@
             <div v-if="unreadCount > 0 && currentTab !== 'inbox'" style="position:relative;margin-top:4px;text-align:center;">
                 <div class="unread-bubble">有人發來感謝！🎉</div>
             </div>
+            <button @click="showFeedbackModal=true" class="feedback-sidebar-btn">
+                <i class="fa-regular fa-comment-dots"></i>
+                <span class="nav-label">我想反饋</span>
+            </button>
         </div>
 
         <div class="sidebar-user" v-if="currentUser">
@@ -2636,6 +2706,76 @@
         </div>
     </div>
 
+    <!-- 反饋彈窗 -->
+    <div v-if="showFeedbackModal" class="feedback-modal-overlay" @click.self="showFeedbackModal=false">
+        <div class="feedback-modal">
+            <div class="feedback-modal-header">
+                <div>
+                    <div class="feedback-modal-title">💬 我想反饋</div>
+                    <div class="feedback-modal-sub">你的聲音很重要，讓感恩小島變得更好 🌿</div>
+                </div>
+                <button @click="showFeedbackModal=false" class="help-close">✕</button>
+            </div>
+            <div class="feedback-modal-body">
+                <div class="form-group">
+                    <label class="form-label">反饋內容 <span style="color:var(--text-sub);font-weight:500;">（字數不限）</span></label>
+                    <textarea v-model="feedbackContent" rows="6" class="form-input"
+                        placeholder="任何建議、想法、Bug 回報，甚至是讚美都可以！✨"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">附上圖片 <span style="color:var(--text-sub);font-weight:500;">（選填，3MB 以內）</span></label>
+                    <div v-if="feedbackImgUrl" style="position:relative;">
+                        <img :src="feedbackImgUrl" class="feedback-preview-img">
+                        <button @click="feedbackImgUrl=''" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:13px;">✕</button>
+                    </div>
+                    <div v-else class="feedback-img-upload" @click="$refs.feedbackImgInput.click()">
+                        <i class="fa-solid fa-image" style="font-size:24px;color:var(--accent);display:block;margin-bottom:6px;"></i>
+                        <div style="font-size:13px;font-weight:700;color:var(--text);">點擊上傳圖片</div>
+                        <div class="feedback-img-hint">支援 JPG、PNG，3MB 以內</div>
+                    </div>
+                    <input type="file" ref="feedbackImgInput" accept="image/*" style="display:none;" @change="onFeedbackImgChange">
+                </div>
+                <button class="feedback-submit-btn"
+                    :disabled="!feedbackContent.trim()"
+                    @click="showFeedbackConfirm=true">
+                    <i class="fa-solid fa-paper-plane"></i> 送出反饋
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 反饋送出確認 -->
+    <div v-if="showFeedbackConfirm" class="send-confirm-overlay" @click.self="showFeedbackConfirm=false">
+        <div class="send-confirm-modal">
+            <div class="send-confirm-header" style="background:linear-gradient(135deg,#FFF4EC,#FFF8F2);">
+                <span class="send-confirm-icon">💬</span>
+                <div class="send-confirm-title">確認送出反饋？</div>
+                <div class="send-confirm-sub">送出後將同步顯示你的名稱 🙌</div>
+            </div>
+            <div class="send-confirm-body">
+                <div class="send-confirm-preview" style="border-color:var(--accent);">
+                    <div class="send-confirm-to" style="color:var(--accent);">
+                        👤 {{ currentUser?.name }} 的反饋
+                    </div>
+                    <div class="send-confirm-msg">{{ feedbackContent }}</div>
+                </div>
+                <div class="send-confirm-btns">
+                    <button class="send-confirm-cancel" @click="showFeedbackConfirm=false">再改改</button>
+                    <button class="send-confirm-ok" style="background:var(--accent);box-shadow:0 4px 14px rgba(232,168,124,0.4);" @click="submitFeedback">
+                        <i class="fa-solid fa-paper-plane"></i> 送出！
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 反饋送出成功 -->
+    <div v-if="feedbackSentShow" class="feedback-sent-overlay">
+        <div class="feedback-sent-icon">🎉</div>
+        <div class="feedback-sent-title">已收到你的反饋！</div>
+        <div class="feedback-sent-sub">感謝你讓感恩小島變得更好 🌿<br>我們會認真閱讀每一則意見</div>
+    </div>
+
     <!-- 說明彈窗 -->
     <div v-if="helpTab || firstLoginHelp" class="help-overlay" @click.self="helpTab=null; firstLoginHelp=false">
         <div class="help-modal">
@@ -3535,6 +3675,48 @@ createApp({
         const avatarPosX = ref(50);
         const avatarPosY = ref(50);
 
+        // ── 反饋系統 ──
+        const showFeedbackModal   = ref(false);
+        const showFeedbackConfirm = ref(false);
+        const feedbackSentShow    = ref(false);
+        const feedbackContent     = ref('');
+        const feedbackImgUrl      = ref('');
+
+        const onFeedbackImgChange = (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            if (file.size > 3 * 1024 * 1024) { alert('圖片太大！請選擇 3MB 以內的圖片。'); return; }
+            const reader = new FileReader();
+            reader.onload = (ev) => { feedbackImgUrl.value = ev.target.result; };
+            reader.readAsDataURL(file);
+            e.target.value = '';
+        };
+
+        const submitFeedback = async () => {
+            if (!feedbackContent.value.trim()) return;
+            const uid  = currentUserId.value;
+            const me   = users.value.find(u => u.id === uid);
+            try {
+                await db.collection('feedbacks').add({
+                    uid,
+                    name:      me?.name || fbUser.value?.displayName || '未知',
+                    email:     me?.email || fbUser.value?.email || '',
+                    avatarUrl: me?.avatarUrl || fbUser.value?.photoURL || '',
+                    content:   feedbackContent.value,
+                    imgUrl:    feedbackImgUrl.value || '',
+                    timestamp: Date.now(),
+                    read:      false,
+                });
+            } catch(e) { console.warn('反饋送出失敗', e); }
+
+            showFeedbackConfirm.value = false;
+            showFeedbackModal.value   = false;
+            feedbackContent.value     = '';
+            feedbackImgUrl.value      = '';
+            feedbackSentShow.value    = true;
+            setTimeout(() => { feedbackSentShow.value = false; }, 2500);
+        };
+
         const onAvatarFileChange = (e) => {
             const file = e.target.files?.[0];
             if (!file) return;
@@ -4159,6 +4341,8 @@ createApp({
             openSendConfirm, openAnonConfirm, confirmAndSend, confirmAndSendAnon,
             openLetter, openLetterModal,
             showAvatarModal, avatarPreviewUrl, avatarPosX, avatarPosY, onAvatarFileChange, saveAvatar,
+            showFeedbackModal, showFeedbackConfirm, feedbackSentShow,
+            feedbackContent, feedbackImgUrl, onFeedbackImgChange, submitFeedback,
             recipientInput, showSuggestions, filteredSuggestions,
             onRecipientInput, selectRecipient, hideSuggestions,
             buyItem: () => {}, triggerGacha, triggerGacha10, finishDraw, finishDraw10, draw10Results, handleImageError, forceReset,
