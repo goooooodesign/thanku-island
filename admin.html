@@ -381,7 +381,41 @@ createApp({setup(){
   const addWL=async()=>{const e=newWL.value.trim().toLowerCase();if(!e||wl.value.includes(e))return;wl.value.push(e);await db.collection('admin_settings').doc('admin_config').set({emails:wl.value});newWL.value='';toast('✅ 已新增 '+e);};
   const rmWL=async(email)=>{if(email===fbUser.value?.email){toast('不能移除自己！','err');return;}wl.value=wl.value.filter(e=>e!==email);await db.collection('admin_settings').doc('admin_config').set({emails:wl.value});toast('已移除 '+email);};
   const openRC=()=>{if(rTarget.value==='select'&&selUsers.value.length===0)return;rShow.value=true;};
-  const doReward=async()=>{sending.value=true;try{const targets=rTarget.value==='all'?profiles.value.map(p=>p.id):selUsers.value;const rt=rtypes.find(r=>r.id===rType.value);const ts=Date.now();for(const uid of targets){try{const ud=await db.collection('users').doc(uid).get();if(!ud.exists)continue;const data=JSON.parse(JSON.stringify(ud.data()));const ul=data.users||[];let ui=ul.findIndex(u=>u.id===uid);if(ui<0){ul.push({id:uid});ui=ul.length-1;}const amt=rAmt.value;if(rType.value==='energy')ul[ui].energy=(ul[ui].energy||0)+amt;if(rType.value==='cards')ul[ui].cards=Math.min(6,(ul[ui].cards||0)+amt);if(rType.value==='tiles')ul[ui].tileCount=(ul[ui].tileCount||6)+amt;if(rType.value==='shells')ul[ui].shells=(ul[ui].shells||0)+amt;data.users=ul;await db.collection('users').doc(uid).set(data);await db.collection('inboxes').doc(uid).collection('items').add({type:'admin_reward',rewardType:rType.value,amount:amt,note:rNote.value||'',timestamp:ts,read:false,claimed:rType.value!=='tiles',title:'🎁 管理員發放了 '+rt.icon+rt.label+' ×'+amt+'！'});}catch(ue){}}if(rTarget.value==='all'){await db.collection('announcements').add({type:'admin_reward',title:'🎁 管理員發放了 '+rt.icon+rt.label+' ×'+rAmt.value+'！',content:'全站所有島民各獲得 '+rt.icon+rt.label+' ×'+rAmt.value+(rNote.value?'\n\n'+rNote.value:''),timestamp:ts});}toast('✅ 已發放給 '+targets.length+' 位使用者！');rShow.value=false;rNote.value='';selUsers.value=[];await loadData();}catch(e){toast('發放失敗','err');}sending.value=false;};
+  const doReward=async()=>{sending.value=true;try{
+    const targets=rTarget.value==='all'?profiles.value.map(p=>p.id):selUsers.value;
+    const rt=rtypes.find(r=>r.id===rType.value);
+    const ts=Date.now();
+    const amt=rAmt.value;
+    for(const uid of targets){
+      try{
+        // 只寫入 inbox，不直接入庫
+        // 使用者登入後自己到信箱領取，才會實際入帳
+        await db.collection('inboxes').doc(uid).collection('items').add({
+          type:'admin_reward',
+          rewardType:rType.value,
+          amount:amt,
+          note:rNote.value||'',
+          timestamp:ts,
+          read:false,
+          processed:false,
+          title:'🎁 管理員送你 '+rt.icon+rt.label+' ×'+amt+'！',
+        });
+      }catch(ue){console.warn(uid,ue);}
+    }
+    // 全站發放時加一則公告
+    if(rTarget.value==='all'){
+      await db.collection('announcements').add({
+        type:'admin_reward',
+        title:'🎁 全站發放！所有人都有 '+rt.icon+rt.label+' ×'+amt,
+        content:'快去信箱的「領取道具」分頁領取你的獎勵！'+(rNote.value?'\n\n'+rNote.value:''),
+        timestamp:ts,
+      });
+    }
+    toast('✅ 已通知 '+targets.length+' 位使用者，他們登入後可在信箱領取！');
+    rShow.value=false;rNote.value='';selUsers.value=[];
+    await loadData();
+  }catch(e){toast('發放失敗','err');console.error(e);}
+  sending.value=false;};
   const openAC=()=>{if(aTitle.value.trim()&&aContent.value.trim())aShow.value=true;};
   const doAnn=async()=>{sending.value=true;try{await db.collection('announcements').add({type:'admin',title:aTitle.value.trim(),content:aContent.value.trim(),timestamp:Date.now(),fromName:'感恩小島官方'});toast('✅ 全站公告已發送！');aShow.value=false;aTitle.value='';aContent.value='';await loadData();}catch(e){toast('發送失敗','err');}sending.value=false;};
   const markRead=async(fb)=>{try{await db.collection('feedback').doc(fb.id).update({read:true});fb.read=true;}catch(e){}};

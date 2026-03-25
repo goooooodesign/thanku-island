@@ -2466,15 +2466,21 @@
                     <div v-if="unclaimedRewards.length === 0" class="empty-state">
                         <div style="font-size:48px;margin-bottom:12px;">🎁</div>
                         <div>目前沒有待領取的道具</div>
-                        <div style="font-size:12px;margin-top:6px;color:var(--text-sub)">多收感謝，板塊會在這裡等你領取 🏝️</div>
+                        <div style="font-size:12px;margin-top:6px;color:var(--text-sub)">多收感謝，道具會在這裡等你領取 🌿</div>
                     </div>
                     <div v-else class="letters-grid">
                         <div v-for="reward in unclaimedRewards" :key="reward.id" class="letter-card reward-card">
-                            <div class="reward-card-icon">🏝️</div>
+                            <div class="reward-card-icon">
+                                {{ {tile:'🏝️', tiles:'🏝️', energy:'⚡', cards:'💌', shells:'🪙'}[reward.type] || '🎁' }}
+                            </div>
                             <div class="reward-card-title">{{ reward.title }}</div>
                             <div class="reward-card-desc">{{ reward.desc }}</div>
+                            <div v-if="reward.amount && reward.type !== 'tile' && reward.type !== 'tiles'"
+                                 style="margin-top:8px;font-size:20px;font-weight:900;color:var(--primary-h);">
+                                ×{{ reward.amount }}
+                            </div>
                             <button @click="claimReward(reward)" class="btn-primary" style="margin-top:12px;width:100%;">
-                                <i class="fa-solid fa-gift"></i> 領取
+                                <i class="fa-solid fa-hand-holding-heart"></i> 領取！
                             </button>
                         </div>
                     </div>
@@ -3367,6 +3373,7 @@ createApp({
                         const existingLetterIds = new Set(letters.value.map(l => String(l.id)));
                         for (const docSnap of inboxSnap.docs) {
                             const item = { id: docSnap.id, ...docSnap.data() };
+
                             if (item.type === 'letter') {
                                 // 合併新信件（避免重複）
                                 if (!existingLetterIds.has(item.id)) {
@@ -3394,7 +3401,31 @@ createApp({
                                                 claimed: false
                                             });
                                         }
-                                        // 標記已處理，避免重複加能量
+                                        await db.collection('inboxes').doc(uid)
+                                            .collection('items').doc(docSnap.id)
+                                            .update({ processed: true });
+                                    }
+                                }
+                            }
+
+                            // ── 管理員發放道具 → 放到「領取道具」分頁待領取 ──
+                            if (item.type === 'admin_reward' && !item.processed) {
+                                if (me) {
+                                    if (!me.rewards) me.rewards = [];
+                                    // 避免重複加入
+                                    const alreadyIn = me.rewards.some(r => r.id === `admin_${item.id}`);
+                                    if (!alreadyIn) {
+                                        const rewardIcon = { energy:'⚡', cards:'💌', tiles:'🏝️', shells:'🪙' }[item.rewardType] || '🎁';
+                                        me.rewards.push({
+                                            id: `admin_${item.id}`,
+                                            type: item.rewardType || 'energy',
+                                            amount: item.amount || 1,
+                                            title: item.title || `🎁 管理員發放了 ${rewardIcon} ×${item.amount}！`,
+                                            desc: item.note || '管理員送出的特別獎勵，快點領取吧！🎉',
+                                            claimed: false,
+                                            timestamp: item.timestamp,
+                                        });
+                                        // 標記已處理
                                         await db.collection('inboxes').doc(uid)
                                             .collection('items').doc(docSnap.id)
                                             .update({ processed: true });
@@ -3866,9 +3897,16 @@ createApp({
             const r = (user.rewards || []).find(x => x.id === reward.id);
             if (!r || r.claimed) return;
             r.claimed = true;
-            // 獎勵類型：tile（島嶼板塊）
-            if (reward.type === 'tile') {
-                user.tileCount = (user.tileCount || 6) + 1;
+
+            const amt = reward.amount || 1;
+            if (reward.type === 'tile' || reward.type === 'tiles') {
+                user.tileCount = (user.tileCount || 6) + amt;
+            } else if (reward.type === 'energy') {
+                user.energy = (user.energy || 0) + amt;
+            } else if (reward.type === 'cards') {
+                user.cards = Math.min(6, (user.cards || 0) + amt);
+            } else if (reward.type === 'shells') {
+                user.shells = (user.shells || 0) + amt;
             }
             await saveData();
         };
