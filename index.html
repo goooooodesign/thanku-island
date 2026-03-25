@@ -8,6 +8,27 @@
     <!-- Vue 3 (可換成本機版本) -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script>
+    // Firebase 設定
+    const firebaseConfig = {
+        apiKey: "AIzaSyC-JR80af8Vx7SHmyDUkGFVFD9HzlmpP8w",
+        authDomain: "thanku-island-30428.firebaseapp.com",
+        projectId: "thanku-island-30428",
+        storageBucket: "thanku-island-30428.firebasestorage.app",
+        messagingSenderId: "245260789354",
+        appId: "1:245260789354:web:dfc729c0c0ea7cc4360c13",
+        measurementId: "G-FYRJ7BY75K"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db   = firebase.firestore();
+    const auth = firebase.auth();
+    const googleProvider = new firebase.auth.GoogleAuthProvider();
+    </script>
+
     <!-- FontAwesome (圖示) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -387,6 +408,54 @@
 
         /* 底部 nav → 桌面版隱藏 */
         .bottom-nav { display: none; }
+
+        /* ── 登入畫面 ── */
+        .login-screen {
+            position: fixed; inset: 0; z-index: 9999;
+            background: linear-gradient(135deg, #EFF8F1 0%, #D4EDD8 50%, #C8E8D4 100%);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .login-card {
+            background: rgba(255,255,255,0.92); backdrop-filter: blur(20px);
+            border: 2px solid rgba(255,255,255,0.8);
+            border-radius: 28px; padding: 48px 40px;
+            text-align: center; max-width: 360px; width: 90%;
+            box-shadow: 0 20px 60px rgba(100,140,110,0.2);
+        }
+        .login-logo { font-size: 64px; line-height: 1; margin-bottom: 16px;
+            display: block; animation: float-island 4s ease-in-out infinite; }
+        .login-title { font-size: 28px; font-weight: 800; color: var(--text); margin: 0 0 4px; }
+        .login-sub { font-size: 12px; color: var(--primary-h); font-weight: 700;
+            letter-spacing: 0.12em; margin: 0 0 20px; }
+        .login-desc { font-size: 13px; color: var(--text-sub); font-weight: 600;
+            line-height: 1.6; margin-bottom: 32px; }
+        .google-btn {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; padding: 14px 24px; border-radius: var(--radius-pill);
+            background: #fff; border: 2px solid var(--border);
+            font-size: 14px; font-weight: 800; color: var(--text);
+            cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(100,100,100,0.1);
+        }
+        .google-btn:hover { border-color: #4285F4; box-shadow: 0 6px 20px rgba(66,133,244,0.2); transform: translateY(-1px); }
+        .login-error { margin-top: 12px; font-size: 12px; color: var(--alert); font-weight: 700; }
+
+        /* 登入後右上角使用者資訊 */
+        .topbar-user {
+            display: flex; align-items: center; gap: 8px;
+            margin-left: auto; cursor: pointer;
+        }
+        .topbar-avatar {
+            width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
+            border: 2px solid var(--primary);
+        }
+        .topbar-username { font-size: 12px; font-weight: 700; color: var(--text-sub); }
+        .topbar-signout {
+            font-size: 11px; color: var(--text-sub); background: none; border: none;
+            cursor: pointer; padding: 4px 8px; border-radius: var(--radius-pill);
+            transition: all 0.15s;
+        }
+        .topbar-signout:hover { background: var(--surface-2); color: var(--alert); }
 
         /* 稀有度標籤 */
         .rarity-badge {
@@ -1040,6 +1109,32 @@
     </div>
 
     <!-- 抽卡動畫 -->
+    <!-- 登入畫面 -->
+    <div v-if="!fbUser && !fbLoading" class="login-screen">
+        <div class="login-card">
+            <div class="login-logo">🏝️</div>
+            <h1 class="login-title">感恩小島</h1>
+            <p class="login-sub">ThankU Island</p>
+            <p class="login-desc">用感謝的力量，打造屬於你的小島 🌿</p>
+            <button @click="signInWithGoogle" class="google-btn">
+                <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.29-8.16 2.29-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                使用 Google 帳號登入
+            </button>
+            <div v-if="loginError" class="login-error">{{ loginError }}</div>
+        </div>
+    </div>
+
+    <!-- 載入中 -->
+    <div v-if="fbLoading" class="login-screen">
+        <div class="login-card">
+            <div class="login-logo" style="animation:float-island 2s ease-in-out infinite;">🏝️</div>
+            <p style="color:var(--text-sub);font-weight:700;margin-top:16px;">載入中...</p>
+        </div>
+    </div>
+
+    <!-- 主畫面（登入後才顯示）-->
+    <template v-if="fbUser && !fbLoading">
+
     <div v-if="isDrawing" class="gacha-overlay">
         <div v-if="!drawResult && !draw10Results">
             <div class="gacha-shake">📦</div>
@@ -1151,6 +1246,11 @@
                     <i class="fa-solid fa-mountain-sun"></i>
                     編輯小島
                 </button>
+            </div>
+            <div class="topbar-user" v-if="fbUser">
+                <img v-if="fbUser.photoURL" :src="fbUser.photoURL" class="topbar-avatar" :alt="fbUser.displayName">
+                <span class="topbar-username">{{ fbUser.displayName?.split(' ')[0] }}</span>
+                <button @click="signOut" class="topbar-signout" title="登出">登出</button>
             </div>
         </div>
 
@@ -1611,6 +1711,8 @@
 
     <!-- Bottom Nav（保留 HTML 但 CSS 隱藏） -->
     <nav class="bottom-nav"></nav>
+
+    </template><!-- /v-if fbUser -->
 </div>
 
 <script>
@@ -1947,40 +2049,107 @@ createApp({
             });
         };
 
-        // ===== 資料持久化 =====
-        const saveData = () => {
-            localStorage.setItem('thankuIslandData', JSON.stringify({ users: users.value, letters: letters.value }));
-        };
-        const initData = () => {
+        // ===== Firebase 認證 =====
+        const fbUser    = ref(null);
+        const fbLoading = ref(true);
+        const loginError = ref('');
+
+        const signInWithGoogle = async () => {
+            loginError.value = '';
             try {
-                const raw = localStorage.getItem('thankuIslandData');
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (parsed.users?.length) {
-                        users.value = parsed.users.map(u => ({
-                            ...u, warehouse: u.warehouse || []
-                        }));
-                        letters.value = (parsed.letters || []).map(l => ({ ...l, read: l.read ?? true }));
-                    }
-                }
+                await auth.signInWithPopup(googleProvider);
             } catch(e) {
-                errorMsg.value = '資料解析失敗，請清除後重試。';
+                loginError.value = '登入失敗，請再試一次。';
             }
-            // 若沒有任何感謝訊息，加入示意資料讓佈告欄看起來溫馨
+        };
+        const signOut = async () => {
+            await auth.signOut();
+        };
+
+        // ===== 資料持久化（Firestore）=====
+        const saveData = async () => {
+            if (!fbUser.value) return;
+            const uid = fbUser.value.uid;
+            try {
+                await db.collection('users').doc(uid).set({
+                    users: JSON.parse(JSON.stringify(users.value)),
+                    letters: JSON.parse(JSON.stringify(letters.value)),
+                    updatedAt: Date.now()
+                });
+            } catch(e) {
+                // 靜默失敗，不打擾使用者
+            }
+        };
+
+        const saveTiles = async () => {
+            if (!fbUser.value) return;
+            const uid = fbUser.value.uid;
+            // 取得引擎的 tiles 並存雲端
+            const eng = window.islandEngine;
+            if (!eng) return;
+            try {
+                const tilesArr = eng.exportTiles ? eng.exportTiles() : null;
+                if (tilesArr) {
+                    await db.collection('tiles').doc(uid).set({ tiles: tilesArr, updatedAt: Date.now() });
+                }
+            } catch(e) {}
+        };
+
+        const initData = async (uid) => {
+            // 暴露 fbUser 給引擎使用
+            window._fbUser = fbUser.value;
+            try {
+                const doc = await db.collection('users').doc(uid).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    if (data.users?.length) {
+                        users.value = data.users.map(u => ({ ...u, warehouse: u.warehouse || [] }));
+                        letters.value = (data.letters || []).map(l => ({ ...l, read: l.read ?? true }));
+                    }
+                } else {
+                    // 新使用者：建立預設資料
+                    const newUser = {
+                        id: uid,
+                        name: fbUser.value.displayName || '島民',
+                        email: fbUser.value.email || '',
+                        level: 1, shells: 0, energy: 500, cards: 3,
+                        island: [], warehouse: []
+                    };
+                    users.value = [newUser];
+                    letters.value = [];
+                    currentUserId.value = uid;
+                    await saveData();
+                }
+                // 設定當前使用者
+                const me = users.value.find(u => u.id === uid);
+                if (me) currentUserId.value = uid;
+                else {
+                    currentUserId.value = users.value[0]?.id || uid;
+                }
+
+                // 載入地形（從 Firestore）
+                try {
+                    const tilesDoc = await db.collection('tiles').doc(uid).get();
+                    if (tilesDoc.exists && tilesDoc.data().tiles?.length) {
+                        window.islandEngine?.importTiles(tilesDoc.data().tiles);
+                    }
+                } catch(_te) {}
+
+            } catch(e) {
+                errorMsg.value = '資料載入失敗，請重新整理。';
+            }
+            // 示意感謝訊息（若空白）
             if (letters.value.length === 0) {
                 const now = Date.now();
                 letters.value = [
-                    { id: now-5000, from:'u2', to:'u1', content:'謝謝 Alice 上週幫我 review 程式碼，給了很多寶貴建議，讓我成長了很多！🌟', timestamp: now-5000, cardCost:2, likes:['u1','u3'], read:true },
-                    { id: now-4000, from:'u1', to:'u3', content:'Carol 每次都記得大家的生日，還幫忙訂蛋糕，這份細心真的讓我好感動 🎂', timestamp: now-4000, cardCost:1, likes:['u2'], read:true },
-                    { id: now-3000, from:'u3', to:'u2', content:'Bob 在那個關鍵時刻頂住了，帶著整個團隊把 bug 解掉，超強的！感謝你 💪', timestamp: now-3000, cardCost:1, likes:['u1'], read:true },
-                    { id: now-2000, from:'u1', to:'u2', content:'謝謝你總是願意聽我說話，每次遇到困難你都在，感覺很幸運有這樣的同事 🌿', timestamp: now-2000, cardCost:1, likes:[], read:true },
-                    { id: now-1000, from:'u2', to:'u3', content:'謝謝 Carol 這次主動接下簡報準備，做得超級精彩，客戶都說讚！✨', timestamp: now-1000, cardCost:1, likes:['u1','u2'], read:true },
+                    { id: now-5000, from: uid, to: uid, content:'歡迎來到感恩小島！🌿 開始傳遞你的第一份感謝吧', timestamp: now-5000, cardCost:1, likes:[], read:true },
                 ];
-                saveData();
+                await saveData();
             }
         };
-        const forceReset = () => {
-            localStorage.removeItem('thankuIslandData');
+        const forceReset = async () => {
+            if (!fbUser.value) return;
+            await db.collection('users').doc(fbUser.value.uid).delete();
             location.reload();
         };
 
@@ -2399,17 +2568,26 @@ createApp({
 
         // ===== Watchers =====
         watch(displayIslandItems, initAnimalStates, { deep: true });
-        watch([users, letters], saveData, { deep: true });
+        // 只在登入後才自動存雲端，避免未登入時觸發
+        watch([users, letters], () => { if (fbUser.value) saveData(); }, { deep: true });
 
         onMounted(() => {
-            initData();
-            initAnimalStates();
-            roamInterval = setInterval(moveAnimals, 4500);
-            // 初始化島嶼 canvas（用 setTimeout 確保 DOM ready）
-            setTimeout(() => {
-                window.initIslandCanvas?.();
-                setTimeout(() => updateCamBase(), 300); // canvas 置中後才記錄 camBase
-            }, 100);
+            // Firebase 認證狀態監聽，登入後才載入資料
+            auth.onAuthStateChanged(async (user) => {
+                fbUser.value = user;
+                if (user) {
+                    await initData(user.uid);
+                    initAnimalStates();
+                    if (!roamInterval) roamInterval = setInterval(moveAnimals, 4500);
+                    setTimeout(() => {
+                        window.initIslandCanvas?.();
+                        setTimeout(() => updateCamBase(), 300);
+                    }, 100);
+                } else {
+                    if (roamInterval) { clearInterval(roamInterval); roamInterval = null; }
+                }
+                fbLoading.value = false;
+            });
         });
         onUnmounted(() => {
             if (roamInterval) clearInterval(roamInterval);
@@ -2417,6 +2595,7 @@ createApp({
         });
 
         return {
+            fbUser, fbLoading, loginError, signInWithGoogle, signOut,
             users, currentUserId, currentUser, otherUsers,
             currentTab, letterForm, shopItems, displayIslandItems,
             visitingId, leaderboard, errorMsg, isDrawing, drawResult,
@@ -2840,11 +3019,28 @@ window.initIslandEditorCanvas = function(){
 
 /* ── Public API ── */
 window.islandEngine={
-  save,
+  save(){
+    save(); // localStorage
+    // 同步存 Firestore（若已登入）
+    const user = window._fbUser;
+    if(user){
+      db.collection('tiles').doc(user.uid).set({
+        tiles: [...tiles.values()].map(({tx,ty,cells})=>({tx,ty,cells:Array.from(cells)})),
+        updatedAt: Date.now()
+      }).catch(()=>{});
+    }
+  },
   center(){ if(hCv) autoCenter(hCam,hCv.width,hCv.height); },
   get cam(){ return hCam; },
   getTile(tx,ty){ return tiles.get(TK(tx,ty))||null; },
-  // 判斷螢幕 % 座標是否落在任何 tile 上（供 Vue 用）
+  exportTiles(){
+    return [...tiles.values()].map(({tx,ty,cells})=>({tx,ty,cells:Array.from(cells)}));
+  },
+  importTiles(arr){
+    if(!arr||!arr.length) return;
+    tiles.clear();
+    arr.forEach(({tx,ty,cells})=>tiles.set(TK(tx,ty),{tx,ty,cells:new Uint8Array(cells)}));
+  },
   isOnIsland(xPct, yPct, W, H){
     const cam=hCam;
     const sx=xPct/100*W, sy=yPct/100*H;
@@ -2878,7 +3074,11 @@ window.islandEditorEngine={
     }
   },
   center(){ if(eCv) autoCenter(eCam,eCv.width,eCv.height); },
-  reset(){ tiles.clear(); tiles.set(TK(0,0),{tx:0,ty:0,cells:new Uint8Array(CELL*CELL)}); save(); if(eCv) autoCenter(eCam,eCv.width,eCv.height); },
+  reset(){
+    tiles.clear(); tiles.set(TK(0,0),{tx:0,ty:0,cells:new Uint8Array(CELL*CELL)});
+    window.islandEngine.save(); // 使用 islandEngine.save 確保同步 Firestore
+    if(eCv) autoCenter(eCam,eCv.width,eCv.height);
+  },
 };
 
 /* ── 啟動（頁面載入時立刻讀資料）── */
