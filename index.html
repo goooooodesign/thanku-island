@@ -187,9 +187,43 @@
             color: #fff;
             display: flex; align-items: center; justify-content: center;
             font-size: 16px; font-weight: 800; border-radius: var(--radius);
-            margin-bottom: 8px;
             box-shadow: 0 4px 10px rgba(123,174,138,0.35);
         }
+        /* 頭像上傳 */
+        .sidebar-avatar-wrap {
+            position: relative; width: 52px; height: 52px;
+            cursor: pointer; margin-bottom: 8px;
+        }
+        .sidebar-avatar-img {
+            width: 52px; height: 52px; border-radius: 50%;
+            object-fit: cover; border: 3px solid var(--primary);
+            box-shadow: 0 4px 10px rgba(123,174,138,0.35);
+        }
+        .sidebar-avatar-wrap .sidebar-avatar {
+            width: 52px; height: 52px; border-radius: 50%; margin-bottom: 0;
+            font-size: 20px;
+        }
+        .sidebar-avatar-edit {
+            position: absolute; bottom: -2px; right: -2px;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: var(--accent); color: #fff; font-size: 9px;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid var(--surface);
+            opacity: 0; transition: opacity 0.15s;
+        }
+        .sidebar-avatar-wrap:hover .sidebar-avatar-edit { opacity: 1; }
+
+        /* 板塊不足提示 */
+        .tile-limit-toast {
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+            background: rgba(40,30,20,0.9); color: #fff;
+            padding: 10px 20px; border-radius: var(--radius-pill);
+            font-size: 13px; font-weight: 700; z-index: 9000;
+            pointer-events: none; white-space: nowrap;
+            animation: toast-in 0.3s ease, toast-out 0.3s ease 2.2s both;
+        }
+        @keyframes toast-in  { from { opacity:0; transform: translateX(-50%) translateY(10px); } }
+        @keyframes toast-out { to   { opacity:0; transform: translateX(-50%) translateY(10px); } }
         .sidebar-user-name { font-size: 14px; font-weight: 800; color: var(--text); }
         .sidebar-user-level {
             display: inline-block; font-size: 10px; font-weight: 800;
@@ -459,14 +493,14 @@
         .help-sec-header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 12px 16px; background: var(--surface-2);
-            font-size: 13px; font-weight: 800; color: var(--text); cursor: pointer;
+            font-size: 14px; font-weight: 800; color: var(--text); cursor: pointer;
             transition: background 0.15s;
         }
         .help-sec-header:hover { background: var(--primary-lt); }
         .help-sec-body { padding: 12px 16px; background: var(--surface); }
         .help-line {
-            font-size: 13px; color: var(--text); line-height: 1.8; font-weight: 500;
-            margin-bottom: 6px; padding-left: 4px;
+            font-size: 15px; color: var(--text); line-height: 1.9; font-weight: 500;
+            margin-bottom: 8px; padding-left: 4px;
         }
         .help-line:last-child { margin-bottom: 0; }
 
@@ -1037,6 +1071,34 @@
         .warehouse-item-icon { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; }
         .warehouse-item-icon img { width: 52px; height: 52px; object-fit: contain; }
         .warehouse-item-name { font-size: 10px; color: var(--text); text-align: center; font-weight: 700; line-height: 1.3; }
+
+        /* 物品欄分類 */
+        .warehouse-filter { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 8px 0; flex-shrink: 0; }
+        .wf-btn { font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: var(--radius-pill);
+            border: 1.5px solid var(--border); background: var(--surface); color: var(--text-sub); cursor: pointer; }
+        .wf-btn.active { background: var(--primary); color: #fff; border-color: var(--primary-h); }
+
+        /* Inbox 分頁 */
+        .inbox-tabs { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+        .inbox-tab {
+            padding: 8px 16px; border-radius: var(--radius-pill);
+            border: 2px solid var(--border); background: var(--surface);
+            font-size: 13px; font-weight: 800; color: var(--text-sub); cursor: pointer;
+            transition: all 0.15s; position: relative;
+        }
+        .inbox-tab.active { background: var(--primary); color: #fff; border-color: var(--primary-h); }
+        .inbox-tab-badge {
+            position: absolute; top: -6px; right: -6px;
+            background: var(--alert); color: #fff; font-size: 9px; font-weight: 800;
+            width: 18px; height: 18px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid var(--surface);
+        }
+        /* 道具領取卡片 */
+        .reward-card { text-align: center; padding: 24px 20px; }
+        .reward-card-icon { font-size: 48px; margin-bottom: 10px; }
+        .reward-card-title { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+        .reward-card-desc { font-size: 12px; color: var(--text-sub); font-weight: 600; line-height: 1.6; }
         .warehouse-item-type { font-size: 9px; }
 
 
@@ -1271,7 +1333,12 @@
         </div>
 
         <div class="sidebar-user" v-if="currentUser">
-            <div class="sidebar-avatar">{{ getDisplayInitial(currentUserId) }}</div>
+            <div class="sidebar-avatar-wrap" @click="triggerAvatarUpload" title="點擊更換頭像">
+                <img v-if="currentUser.avatarUrl" :src="currentUser.avatarUrl" class="sidebar-avatar-img" alt="頭像">
+                <div v-else class="sidebar-avatar">{{ getDisplayInitial(currentUserId) }}</div>
+                <div class="sidebar-avatar-edit"><i class="fa-solid fa-camera"></i></div>
+            </div>
+            <input type="file" ref="avatarInput" accept="image/*" style="display:none;" @change="onAvatarChange">
             <div class="sidebar-user-name">{{ currentUser.name }}</div>
             <div class="sidebar-user-level">Level {{ currentUser.level || 1 }}</div>
             <div class="sidebar-stats">
@@ -1285,7 +1352,11 @@
                 </div>
                 <div class="sidebar-stat">
                     <span class="sidebar-stat-label">Cards</span>
-                    <span class="sidebar-stat-val"><i class="fa-regular fa-paper-plane icon-primary"></i>{{ currentUser.cards }}</span>
+                    <span class="sidebar-stat-val"><i class="fa-regular fa-paper-plane icon-primary"></i>{{ currentUser.cards }}/6</span>
+                </div>
+                <div class="sidebar-stat">
+                    <span class="sidebar-stat-label">板塊</span>
+                    <span class="sidebar-stat-val">🏝️ {{ tiles_used }}/{{ currentUser.tileCount || 6 }}</span>
                 </div>
             </div>
         </div>
@@ -1411,7 +1482,6 @@
                         <!-- 倉庫（疊在島底部，編輯模式才顯示） -->
                         <!-- 倉庫（右側彈出面板，編輯模式才顯示） -->
                         <div v-if="isEditMode" class="warehouse-panel" :class="{collapsed: warehouseCollapsed}">
-                            <!-- 摺疊/展開 tab -->
                             <button class="warehouse-toggle" @click="warehouseCollapsed=!warehouseCollapsed">
                                 <span class="warehouse-toggle-icon">‹</span>
                                 <span class="warehouse-toggle-lbl">物品欄</span>
@@ -1420,13 +1490,19 @@
                                 <span class="warehouse-title">🎒 物品欄</span>
                                 <span class="warehouse-sub">點擊放上小島</span>
                             </div>
-                            <div v-if="warehouseItems.length === 0" class="warehouse-empty">
+                            <!-- 分類 tabs -->
+                            <div class="warehouse-filter">
+                                <button v-for="f in [{id:'all',l:'全部'},{id:'animal',l:'🐾 島民'},{id:'decor',l:'🏕️ 裝飾'},{id:'rare',l:'💎 稀有+'},{id:'new',l:'🆕 最新'}]"
+                                    :key="f.id" class="wf-btn" :class="{active: warehouseFilter===f.id}"
+                                    @click="warehouseFilter=f.id">{{ f.l }}</button>
+                            </div>
+                            <div v-if="filteredWarehouse.length === 0" class="warehouse-empty">
                                 <div style="font-size:32px;margin-bottom:8px;">🌊</div>
-                                倉庫是空的<br>去抽卡吧！
+                                {{ warehouseItems.length === 0 ? '倉庫是空的，去抽卡吧！' : '這個分類沒有物品' }}
                             </div>
                             <div v-else class="warehouse-scroll">
                                 <div class="warehouse-grid">
-                                    <div v-for="group in groupedWarehouse" :key="group.key"
+                                    <div v-for="group in filteredWarehouse" :key="group.key"
                                          @click="placeOnIsland(group.items[0])" class="warehouse-item">
                                         <div class="warehouse-item-icon" style="position:relative;">
                                             <img v-if="group.items[0].imgUrl" :src="group.items[0].imgUrl" @error="handleImageError(group.items[0])" :alt="group.items[0].name">
@@ -1743,28 +1819,79 @@
 
             <!-- Inbox -->
             <div v-else-if="currentTab === 'inbox'" key="inbox" class="tab-content">
-                <h2 class="section-title">📬 我的信箱</h2>
-                <div v-if="myLetters.length === 0" class="empty-state">信箱目前是空的。</div>
-                <div v-else class="letters-grid">
-                <div v-for="letter in myLetters" :key="letter.id"
-                     @click="markAsRead(letter)"
-                     class="letter-card" :class="{ unread: !letter.read }">
-                    <div class="letter-header">
-                        <div>
-                            <div class="letter-from">
-                                From: {{ getDisplayName(letter.from) }}
-                                <span v-if="!letter.read" class="new-badge">New</span>
+                <div class="inbox-tabs">
+                    <button v-for="t in [{id:'letter',label:'💌 感謝信'},{id:'notice',label:'📢 官方公告'},{id:'reward',label:'🎁 領取道具'}]"
+                        :key="t.id" class="inbox-tab" :class="{active: inboxTab===t.id}"
+                        @click="inboxTab=t.id">
+                        {{ t.label }}
+                        <span v-if="t.id==='letter' && unreadLetterCount > 0" class="inbox-tab-badge">{{ unreadLetterCount }}</span>
+                        <span v-if="t.id==='reward' && unclaimedRewards.length > 0" class="inbox-tab-badge">{{ unclaimedRewards.length }}</span>
+                    </button>
+                </div>
+
+                <!-- 感謝信 -->
+                <div v-if="inboxTab==='letter'">
+                    <div v-if="myLetters.length === 0" class="empty-state">
+                        <div style="font-size:48px;margin-bottom:12px;">📭</div>
+                        <div>還沒有收到感謝信</div>
+                        <div style="font-size:12px;margin-top:6px;color:var(--text-sub)">把感謝傳出去，好事就會回來的 🌿</div>
+                    </div>
+                    <div v-else class="letters-grid">
+                        <div v-for="letter in myLetters" :key="letter.id"
+                             @click="markAsRead(letter)"
+                             class="letter-card" :class="{ unread: !letter.read }">
+                            <div class="letter-header">
+                                <div>
+                                    <div class="letter-from">
+                                        💌 來自：{{ getDisplayName(letter.from) }}
+                                        <span v-if="!letter.read" class="new-badge">New</span>
+                                    </div>
+                                    <div class="letter-time">{{ formatDate(letter.timestamp) }}</div>
+                                </div>
+                                <div v-if="letter.cardCost > 1" class="letter-multi-badge">×{{ letter.cardCost }}</div>
                             </div>
-                            <div class="letter-time">{{ formatDate(letter.timestamp) }}</div>
+                            <div class="letter-body">{{ letter.content }}</div>
+                            <div class="reward-row">
+                                <span><i class="fa-solid fa-bolt"></i> +{{ (letter.cardCost || 1) * 100 }} 能量</span>
+                                <span class="reward-coins">🏝️ +1 島嶼板塊</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="letter-body">{{ letter.content }}</div>
-                    <div class="reward-row">
-                        <span><i class="fa-solid fa-bolt"></i> +{{ (letter.cardCost || 1) * 100 }}</span>
-                        <span class="reward-coins"><i class="fa-solid fa-coins"></i> 獲得隨機獎勵</span>
+                </div>
+
+                <!-- 官方公告 -->
+                <div v-if="inboxTab==='notice'">
+                    <div class="letters-grid">
+                        <div class="letter-card" style="border-color:var(--primary);">
+                            <div class="letter-header">
+                                <div>
+                                    <div class="letter-from">📢 感恩小島官方</div>
+                                    <div class="letter-time">系統公告</div>
+                                </div>
+                            </div>
+                            <div class="letter-body">🎉 歡迎來到感恩小島！<br><br>這裡是屬於你和你的隊友們共同打造的溫暖角落。每個月你有 3 張感謝卡，快去寄出你的第一份感謝吧！<br><br>小提醒：<br>• 寄出 3 張感謝卡 = 獲得 1 片島嶼板塊<br>• 收到感謝卡 = 在信箱領取 1 片島嶼板塊<br>• 每月 1 號自動補充感謝卡（上限 6 張）<br>• 感恩節、聖誕節、AOV Day 會有驚喜加給 🎁</div>
+                        </div>
                     </div>
                 </div>
-                </div><!-- /letters-grid -->
+
+                <!-- 領取道具 -->
+                <div v-if="inboxTab==='reward'">
+                    <div v-if="unclaimedRewards.length === 0" class="empty-state">
+                        <div style="font-size:48px;margin-bottom:12px;">🎁</div>
+                        <div>目前沒有待領取的道具</div>
+                        <div style="font-size:12px;margin-top:6px;color:var(--text-sub)">多收感謝，板塊會在這裡等你領取 🏝️</div>
+                    </div>
+                    <div v-else class="letters-grid">
+                        <div v-for="reward in unclaimedRewards" :key="reward.id" class="letter-card reward-card">
+                            <div class="reward-card-icon">🏝️</div>
+                            <div class="reward-card-title">{{ reward.title }}</div>
+                            <div class="reward-card-desc">{{ reward.desc }}</div>
+                            <button @click="claimReward(reward)" class="btn-primary" style="margin-top:12px;width:100%;">
+                                <i class="fa-solid fa-gift"></i> 領取
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
         </transition>
@@ -1775,16 +1902,16 @@
     <nav class="bottom-nav"></nav>
 
     <!-- 說明彈窗 -->
-    <div v-if="helpTab" class="help-overlay" @click.self="helpTab=null">
+    <div v-if="helpTab || firstLoginHelp" class="help-overlay" @click.self="helpTab=null; firstLoginHelp=false">
         <div class="help-modal">
             <div class="help-header">
-                <span class="help-title">{{ helpTitles[helpTab] }}</span>
-                <button @click="helpTab=null" class="help-close">✕</button>
+                <span class="help-title">{{ firstLoginHelp ? '🏝️ 歡迎來到感恩小島！' : helpTitles[helpTab] }}</span>
+                <button @click="helpTab=null; firstLoginHelp=false" class="help-close">✕</button>
             </div>
             <div class="help-body">
 
-                <!-- 我的小島（特殊：整體說明 + 分段折疊） -->
-                <div v-if="helpTab==='home'">
+                <!-- 我的小島（特殊：整體說明 + 分段折疊）-->
+                <div v-if="helpTab==='home' || firstLoginHelp">
                     <div class="help-welcome">
                         <div class="help-welcome-icon">🏝️</div>
                         <div class="help-welcome-text">歡迎來到<strong>感恩小島</strong>！<br>這是一個讓感謝變得有溫度的地方 🌿</div>
@@ -2210,6 +2337,8 @@ createApp({
                         name: fbUser.value.displayName || '島民',
                         email: fbUser.value.email || '',
                         level: 1, shells: 0, energy: 500, cards: 3,
+                        tileCount: 6, sentCards: 0, rewards: [],
+                        lastCardRefill: `${new Date().getFullYear()}-${new Date().getMonth()+1}`,
                         island: [], warehouse: []
                     };
                     users.value = [newUser];
@@ -2244,6 +2373,20 @@ createApp({
                     { id: now-5000, from: uid, to: uid, content:'歡迎來到感恩小島！🌿 開始傳遞你的第一份感謝吧', timestamp: now-5000, cardCost:1, likes:[], read:true },
                 ];
                 await saveData();
+            }
+            // 確保現有使用者有 tileCount 欄位
+            const me2 = users.value.find(u => u.id === uid);
+            if (me2 && me2.tileCount === undefined) {
+                me2.tileCount = 6; me2.sentCards = 0;
+                if (!me2.rewards) me2.rewards = [];
+            }
+            // 月度補充感謝卡
+            await checkMonthlyCards();
+            // 初次登入自動顯示說明
+            const firstKey = `thanku_first_${uid}`;
+            if (!localStorage.getItem(firstKey)) {
+                firstLoginHelp.value = true;
+                localStorage.setItem(firstKey, '1');
             }
         };
         const forceReset = async () => {
@@ -2297,7 +2440,7 @@ createApp({
             letterForm.cost = next;
         };
 
-        const sendLetter = () => {
+        const sendLetter = async () => {
             if (!letterForm.toId || !letterForm.content.trim()) { alert('請填寫收件人與訊息。'); return; }
             const sender   = users.value.find(u => u.id === currentUserId.value);
             const receiver = users.value.find(u => u.id === letterForm.toId);
@@ -2305,10 +2448,30 @@ createApp({
             if (sender.cards < cost) return;
 
             sender.cards -= cost;
+
+            // 寄出累積卡數 → 每 3 張送 1 片板塊
+            if (!sender.sentCards) sender.sentCards = 0;
+            sender.sentCards += cost;
+            while (sender.sentCards >= 3) {
+                sender.sentCards -= 3;
+                sender.tileCount = (sender.tileCount || 6) + 1;
+            }
+
             if (receiver) {
                 const bonus = (Math.floor(Math.random() * 450) + 50) * cost;
                 receiver.shells += bonus;
                 receiver.energy += 100 * cost;
+                // 收到感謝卡 → 放入信箱待領取板塊
+                if (!receiver.rewards) receiver.rewards = [];
+                for (let i = 0; i < cost; i++) {
+                    receiver.rewards.push({
+                        id: Date.now() + i,
+                        type: 'tile',
+                        title: '🏝️ 獲得島嶼板塊！',
+                        desc: `${sender.name} 送了你感謝，帶來 1 片新的板塊！快去擴張你的小島吧 🌟`,
+                        claimed: false
+                    });
+                }
             }
 
             letters.value.push({
@@ -2317,7 +2480,7 @@ createApp({
                 cardCost: cost, likes: [], read: false
             });
 
-            saveData();
+            await saveData();
             letterForm.content = '';
             letterForm.toId    = '';
             letterForm.cost    = 1;
@@ -2378,6 +2541,87 @@ createApp({
         };
         const isEditMode = ref(false);
         const warehouseCollapsed = ref(false);
+        const warehouseFilter = ref('all');
+        const inboxTab = ref('letter');
+
+        // 物品欄分類
+        const filteredWarehouse = computed(() => {
+            const f = warehouseFilter.value;
+            const base = groupedWarehouse.value;
+            if (f === 'all') return base;
+            if (f === 'animal') return base.filter(g => g.items[0].type === 'animal');
+            if (f === 'decor')  return base.filter(g => g.items[0].type === 'decor');
+            if (f === 'rare')   return base.filter(g => ['rare','legend'].includes(g.items[0].rarity));
+            if (f === 'new')    return [...base].sort((a,b)=>((b.items[0].id||0)-(a.items[0].id||0)));
+            return base;
+        });
+
+        // 未讀感謝信數
+        const unreadLetterCount = computed(() =>
+            myLetters.value.filter(l => !l.read).length
+        );
+
+        // ── 板塊資源系統 ──
+        // rewards: 待領取道具（存在使用者資料 user.rewards 陣列）
+        const unclaimedRewards = computed(() => {
+            return (currentUser.value?.rewards || []).filter(r => !r.claimed);
+        });
+
+        const claimReward = async (reward) => {
+            const user = currentUser.value;
+            if (!user) return;
+            const r = (user.rewards || []).find(x => x.id === reward.id);
+            if (!r || r.claimed) return;
+            r.claimed = true;
+            // 獎勵類型：tile（島嶼板塊）
+            if (reward.type === 'tile') {
+                user.tileCount = (user.tileCount || 6) + 1;
+            }
+            await saveData();
+        };
+
+        // 感謝卡每月補充（前端檢查，後端應用 Cloud Functions，現用本地邏輯模擬）
+        const checkMonthlyCards = async () => {
+            const user = currentUser.value;
+            if (!user) return;
+            const now = new Date();
+            const thisMonth = `${now.getFullYear()}-${now.getMonth()+1}`;
+            if (user.lastCardRefill !== thisMonth) {
+                // 補充至少 3 張，但不超過上限 6 張
+                const newCards = Math.min(6, (user.cards || 0) + 3);
+                user.cards = newCards;
+                user.lastCardRefill = thisMonth;
+                // 節日加給
+                const md = `${now.getMonth()+1}-${now.getDate()}`;
+                const holidays = ['11-28','11-29','12-25','10-14']; // 感恩節(美)/聖誕/AOV Day
+                if (holidays.some(h => md.startsWith(h.split('-')[0]+'-') && md === h)) {
+                    user.cards = Math.min(6, user.cards + 1);
+                    // 放入公告
+                    if (!user.rewards) user.rewards = [];
+                    user.rewards.push({ id: Date.now(), type: 'notice', title: '🎉 節日驚喜！', desc: '今天是特殊節日，額外獲得 1 張感謝卡！', claimed: true });
+                }
+                await saveData();
+            }
+        };
+
+        // 初次登入自動彈出說明
+        const firstLoginHelp = ref(false);
+
+        // 板塊使用數（從引擎讀取 tiles 數量）
+        const tiles_used = computed(() => {
+            void camTick.value; // 讓它響應地形變化
+            return window.islandEngine?.exportTiles?.()?.length ?? 1;
+        });
+
+        // 同步板塊預算給引擎
+        watch(() => currentUser.value?.tileCount, (val) => {
+            window._tileCount = val || 6;
+        }, { immediate: true });
+
+        // 板塊上限提示
+        window._onTileLimit = () => {
+            alert('🏝️ 島嶼板塊已用完！\n\n取得更多板塊的方法：\n• 每收到 1 張感謝卡 → 信箱領取 1 片板塊\n• 每寄出 3 張感謝卡 → 獲得 1 片板塊');
+        };
 
         // ===== 說明彈窗 =====
         const helpTab     = ref(null);
@@ -2829,10 +3073,14 @@ createApp({
             sortedLetters, getPos,
             isDragging, onDragStart, onDragMove, onDragEnd, dragState,
             onIslandMouseDown, onIslandMouseMove, onIslandMouseUp, centerHomeIsland, camTick,
+            tiles_used,
             poolPreview, poolRarityFilter, openPool, closePool,
             filteredPoolItems, calcRate,
             isEditMode, toggleEditMode, warehouseCollapsed, warehouseItems, groupedWarehouse,
             helpTab, openHelpSecs, helpTitles, helpSections, helpContents, openHelp, toggleHelpSec,
+            firstLoginHelp,
+            inboxTab, unreadLetterCount, unclaimedRewards, claimReward,
+            warehouseFilter, filteredWarehouse,
             placeOnIsland, removeFromIsland,
             getFlip, toggleFlip, getHighlandLift, getTerrainAt,
             scaleItem,
@@ -3163,6 +3411,12 @@ function eDown(e){
     const wx=p.x-eCv.width/2+eCam.x, wy=p.y-eCv.height/2+eCam.y;
     const d=wx/HW, s=wy/HH;
     const tx=Math.floor((d+s)/2/CELL), ty=Math.floor((s-d)/2/CELL), k=TK(tx,ty);
+    // 板塊限制：檢查使用者剩餘板塊數
+    const budget = window._tileCount||6;
+    if(tiles.size >= budget){
+      window._onTileLimit?.(); // 通知 Vue 顯示提示
+      return;
+    }
     if(!tiles.has(k)&&(tiles.size===0||nbrs(tx,ty).some(n=>tiles.has(TK(n.tx,n.ty))))){
       tiles.set(k,{tx,ty,cells:new Uint8Array(CELL*CELL)}); save();
       spawnTile(k); // 彈跳特效
