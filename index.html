@@ -784,6 +784,82 @@
         }
         .sea-visit-btn:hover { background: var(--primary); color: #fff; box-shadow: 0 3px 10px rgba(123,174,138,0.4); }
 
+        /* 搜尋欄 */
+        .sea-search-wrap {
+            position: relative; display: flex; align-items: center;
+            margin-bottom: 14px;
+        }
+        .sea-search-icon { position: absolute; left: 14px; color: var(--text-sub); font-size: 14px; }
+        .sea-search-input {
+            width: 100%; padding: 10px 40px 10px 40px;
+            border: 2px solid var(--border); border-radius: var(--radius-pill);
+            background: var(--surface); font-size: 14px; color: var(--text);
+            font-family: 'Noto Sans TC', sans-serif; font-weight: 500;
+            transition: border-color 0.15s; outline: none;
+        }
+        .sea-search-input:focus { border-color: var(--primary); }
+        .sea-search-clear {
+            position: absolute; right: 14px; background: none; border: none;
+            color: var(--text-sub); cursor: pointer; font-size: 14px; padding: 4px;
+        }
+        /* 探索格子 */
+        .sea-explore-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+        }
+        .sea-explore-card {
+            background: var(--surface); border: 2px solid var(--border);
+            border-radius: var(--radius-lg); padding: 20px 14px 16px;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            transition: all 0.18s; text-align: center;
+        }
+        .sea-explore-card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(100,80,60,0.1); }
+        .sea-explore-avatar {
+            width: 56px; height: 56px; border-radius: 50%;
+            background: var(--primary-lt); border: 2px solid var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; font-weight: 900; color: var(--primary-h); overflow: hidden;
+        }
+        .sea-explore-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .sea-explore-name { font-size: 13px; font-weight: 700; color: var(--text); }
+        .sea-explore-stat { font-size: 11px; color: var(--text-sub); font-weight: 500; }
+        .sea-explore-btn {
+            display: flex; align-items: center; justify-content: center; gap: 5px;
+            width: 100%; padding: 7px 0; border-radius: var(--radius-pill);
+            background: var(--primary-lt); color: var(--primary-h);
+            border: 2px solid var(--primary); font-size: 12px; font-weight: 800;
+            cursor: pointer; transition: all 0.15s; margin-top: 4px;
+        }
+        .sea-explore-btn:hover { background: var(--primary); color: #fff; }
+
+        /* 參觀模式 banner */
+        .visit-banner {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            z-index: 200; display: flex; align-items: center; gap: 14px;
+            background: rgba(40,32,28,0.92); backdrop-filter: blur(12px);
+            border-radius: var(--radius-pill); padding: 12px 20px 12px 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3); border: 1.5px solid rgba(255,255,255,0.15);
+            animation: popReveal 0.3s cubic-bezier(0.175,0.885,0.32,1.275);
+        }
+        .visit-banner-avatar {
+            width: 36px; height: 36px; border-radius: 50%; overflow: hidden;
+            border: 2px solid var(--primary); flex-shrink: 0;
+            background: var(--primary-lt); display: flex; align-items: center;
+            justify-content: center; font-size: 16px; font-weight: 800; color: var(--primary-h);
+        }
+        .visit-banner-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .visit-banner-text { font-size: 13px; color: rgba(255,255,255,0.85); font-weight: 700; }
+        .visit-banner-name { color: #fff; font-weight: 900; }
+        .visit-banner-home {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: var(--radius-pill);
+            background: var(--primary); color: #fff; border: none;
+            font-size: 13px; font-weight: 800; cursor: pointer;
+            transition: all 0.15s; white-space: nowrap;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .visit-banner-home:hover { background: var(--primary-h); transform: scale(1.04); }
+
         /* 編輯模式：物品操作按鈕組 */
         .item-edit-btns {
             position: absolute; top: -12px; left: 50%;
@@ -1136,6 +1212,15 @@
         .reward-card-icon { font-size: 48px; margin-bottom: 10px; }
         .reward-card-title { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
         .reward-card-desc { font-size: 12px; color: var(--text-sub); font-weight: 600; line-height: 1.6; }
+
+        /* 公告卡片 */
+        .notice-card { border-color: var(--primary) !important; background: var(--primary-lt) !important; }
+        .notice-avatar {
+            width: 36px; height: 36px; border-radius: 50%; overflow: hidden;
+            background: var(--primary); display: flex; align-items: center;
+            justify-content: center; font-size: 16px; font-weight: 800;
+            color: #fff; flex-shrink: 0;
+        }
 
         /* ── 信件彈窗 ── */
         .letter-modal-overlay {
@@ -1934,9 +2019,22 @@
                 <div class="sea-hero">
                     <div class="sea-hero-icon">🏝️</div>
                     <h2 class="sea-hero-title">Sea 群島</h2>
-                    <p class="sea-hero-sub">獲得最多感謝的人們 ✨</p>
+                    <p class="sea-hero-sub">探索每一座充滿感謝的小島 ✨</p>
                 </div>
-                <div class="sea-list">
+
+                <!-- Sea 分頁 -->
+                <div class="inbox-tabs" style="margin-bottom:20px;">
+                    <button class="inbox-tab" :class="{active: seaTab==='rank'}" @click="seaTab='rank'">
+                        🏆 感謝排行榜
+                    </button>
+                    <button class="inbox-tab" :class="{active: seaTab==='explore'}" @click="seaTab='explore'">
+                        🗺️ 探索群島
+                    </button>
+                </div>
+
+                <!-- 排行榜 -->
+                <div v-if="seaTab==='rank'" class="sea-list">
+                    <p style="font-size:13px;color:var(--text-sub);margin-bottom:16px;font-weight:500;">依照收到的感謝信數量排行 💌</p>
                     <div v-for="(user, index) in leaderboard" :key="user.id" class="sea-item">
                         <div class="sea-rank-badge" :class="['rank-'+Math.min(index+1,4)]">
                             {{ index===0 ? '🥇' : index===1 ? '🥈' : index===2 ? '🥉' : String(index+1).padStart(2,'0') }}
@@ -1953,10 +2051,44 @@
                                 <span class="sea-island-tag">🏝️ 的小島</span>
                             </div>
                         </div>
-                        <button class="sea-visit-btn" title="前往參觀">
+                        <button class="sea-visit-btn" @click="visitUser(user.id)" v-if="user.id !== currentUserId">
                             <i class="fa-solid fa-ship"></i>
                             <span>前往參觀</span>
                         </button>
+                        <div v-else class="sea-visit-btn" style="opacity:0.4;cursor:default;">
+                            <i class="fa-solid fa-house"></i>
+                            <span>我的島</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 探索群島 -->
+                <div v-if="seaTab==='explore'">
+                    <div class="sea-search-wrap">
+                        <i class="fa-solid fa-magnifying-glass sea-search-icon"></i>
+                        <input v-model="seaSearch" class="sea-search-input" placeholder="搜尋島民名稱或信箱...">
+                        <button v-if="seaSearch" @click="seaSearch=''" class="sea-search-clear">✕</button>
+                    </div>
+                    <p style="font-size:12px;color:var(--text-sub);margin-bottom:16px;font-weight:500;">
+                        共 {{ seaFilteredUsers.length }} 位島民
+                    </p>
+                    <div class="sea-explore-grid">
+                        <div v-for="user in seaFilteredUsers" :key="user.id" class="sea-explore-card">
+                            <div class="sea-explore-avatar">
+                                <img v-if="getUserAvatar(user.id)" :src="getUserAvatar(user.id).url" :style="{objectPosition: getUserAvatar(user.id).posX+'% '+getUserAvatar(user.id).posY+'%'}" :alt="user.name">
+                                <span v-else>{{ user.name[0] }}</span>
+                            </div>
+                            <div class="sea-explore-name">{{ user.name }}</div>
+                            <div class="sea-explore-stat">
+                                <i class="fa-regular fa-envelope"></i> {{ seaUserStats[user.id] || 0 }} 封感謝
+                            </div>
+                            <button v-if="user.id !== currentUserId" class="sea-explore-btn" @click="visitUser(user.id)">
+                                <i class="fa-solid fa-ship"></i> 參觀
+                            </button>
+                            <div v-else class="sea-explore-btn" style="opacity:0.4;cursor:default;background:var(--surface-2);">
+                                <i class="fa-solid fa-house"></i> 我的島
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2006,6 +2138,7 @@
                 <!-- 官方公告 -->
                 <div v-if="inboxTab==='notice'">
                     <div class="letters-grid">
+                        <!-- 固定系統公告 -->
                         <div class="letter-card" style="border-color:var(--primary);">
                             <div class="letter-header">
                                 <div>
@@ -2013,7 +2146,27 @@
                                     <div class="letter-time">系統公告</div>
                                 </div>
                             </div>
-                            <div class="letter-body">🎉 歡迎來到感恩小島！<br><br>這裡是屬於你和你的隊友們共同打造的溫暖角落。每個月你有 3 張感謝卡，快去寄出你的第一份感謝吧！<br><br>小提醒：<br>• 寄出 3 張感謝卡 = 獲得 1 片島嶼板塊<br>• 收到感謝卡 = 在信箱領取 1 片島嶼板塊<br>• 每月 1 號自動補充感謝卡（上限 6 張）<br>• 感恩節、聖誕節、AOV Day 會有驚喜加給 🎁</div>
+                            <div class="letter-body">🎉 歡迎來到感恩小島！<br><br>每個月你有 3 張感謝卡，快去寄出你的第一份感謝吧！<br><br>• 寄出 3 張感謝卡 = 獲得 1 片島嶼板塊<br>• 收到感謝卡 = 在信箱領取 1 片島嶼板塊<br>• 每月 1 號自動補充感謝卡（上限 6 張）<br>• 感恩節、聖誕節、AOV Day 會有驚喜加給 🎁</div>
+                        </div>
+                        <!-- 動態公告（新成員歡迎 etc.）-->
+                        <div v-for="ann in announcements" :key="ann.id" class="letter-card notice-card">
+                            <div class="letter-header">
+                                <div style="display:flex;align-items:center;gap:10px;">
+                                    <div class="notice-avatar">
+                                        <img v-if="ann.photoURL" :src="ann.photoURL" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                                        <span v-else>{{ (ann.name||'?')[0] }}</span>
+                                    </div>
+                                    <div>
+                                        <div class="letter-from">📢 感恩小島官方</div>
+                                        <div class="letter-time">{{ formatDate(ann.timestamp) }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="letter-body" v-if="ann.type==='welcome'">
+                                🎊 <strong>{{ ann.name }}</strong> 加入了感恩小島！<br>
+                                一起歡迎這位新島民！快去傳遞你的第一份感謝給他/她吧 🌿
+                            </div>
+                            <div class="letter-body" v-else>{{ ann.content }}</div>
                         </div>
                     </div>
                 </div>
@@ -2044,6 +2197,18 @@
 
     <!-- Bottom Nav（保留 HTML 但 CSS 隱藏） -->
     <nav class="bottom-nav"></nav>
+
+    <!-- 參觀模式 Banner -->
+    <div v-if="visitingId" class="visit-banner">
+        <div class="visit-banner-avatar">
+            <img v-if="getUserAvatar(visitingId)" :src="getUserAvatar(visitingId).url" :style="{objectPosition: getUserAvatar(visitingId).posX+'% '+getUserAvatar(visitingId).posY+'%'}">
+            <span v-else>{{ getDisplayName(visitingId)[0] }}</span>
+        </div>
+        <span class="visit-banner-text">正在參觀 <span class="visit-banner-name">{{ getDisplayName(visitingId) }}</span> 的小島 ⛵</span>
+        <button class="visit-banner-home" @click="stopVisiting">
+            <i class="fa-solid fa-house"></i> 回家
+        </button>
+    </div>
 
     <!-- 信件彈窗 -->
     <div v-if="openLetter" class="letter-modal-overlay" @click.self="openLetter=null">
@@ -2254,6 +2419,27 @@ createApp({
             const id = visitingId.value || currentUserId.value;
             return (users.value.find(u => u.id === id) || {}).island || [];
         });
+        // ── Sea 群島分頁 ──
+        const seaTab    = ref('rank');
+        const seaSearch = ref('');
+
+        const seaUserStats = computed(() => {
+            const map = {};
+            users.value.forEach(u => { map[u.id] = 0; });
+            letters.value.forEach(l => { if (map[l.to] !== undefined) map[l.to]++; });
+            return map;
+        });
+
+        const seaFilteredUsers = computed(() => {
+            const q = seaSearch.value.trim().toLowerCase();
+            const all = [...users.value].sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
+            if (!q) return all;
+            return all.filter(u =>
+                u.name.toLowerCase().includes(q) ||
+                (u.email || '').toLowerCase().includes(q)
+            );
+        });
+
         const leaderboard = computed(() => {
             // 計算每位使用者收到感謝的次數
             const countMap = {};
@@ -2552,6 +2738,17 @@ createApp({
                     letters.value = [];
                     currentUserId.value = uid;
                     await saveData();
+
+                    // 新帳號歡迎公告：寫入 Firestore announcements
+                    try {
+                        await db.collection('announcements').add({
+                            type: 'welcome',
+                            uid,
+                            name: fbUser.value.displayName || '新島民',
+                            photoURL: fbUser.value.photoURL || '',
+                            timestamp: Date.now(),
+                        });
+                    } catch(_) {}
                 }
                 // 設定當前使用者
                 const me = users.value.find(u => u.id === uid);
@@ -2636,8 +2833,28 @@ createApp({
             visitingId.value    = null;
             letterForm.toId     = '';
         };
-        const visitUser  = (id) => { visitingId.value = id; switchTab('home'); };
-        const stopVisiting = ()  => { visitingId.value = null; };
+        const visitUser  = (id) => {
+            if (id === currentUserId.value) return;
+            visitingId.value = id;
+            switchTab('home');
+            // 重新初始化 canvas 以顯示對方島嶼
+            setTimeout(() => window.initIslandCanvas?.(), 100);
+        };
+        const stopVisiting = () => {
+            visitingId.value = null;
+            // 重新載入自己的地形
+            setTimeout(() => {
+                window.islandEngine?.importTiles([]);
+                if (fbUser.value) {
+                    db.collection('tiles').doc(fbUser.value.uid).get().then(doc => {
+                        if (doc.exists && doc.data().tiles?.length) {
+                            window.islandEngine?.importTiles(doc.data().tiles);
+                            setTimeout(() => window.islandEngine?.center(), 100);
+                        }
+                    });
+                }
+            }, 50);
+        };
         const switchTab  = (tab) => {
             const prev = currentTab.value;
             currentTab.value = tab;
@@ -2792,7 +3009,17 @@ createApp({
         const isEditMode = ref(false);
         const warehouseCollapsed = ref(false);
         const warehouseFilter = ref('all');
-        const inboxTab = ref('letter');
+        const inboxTab      = ref('letter');
+        const announcements = ref([]); // 全站官方公告（從 Firestore announcements 讀取）
+
+        // 讀取全站公告
+        const loadAnnouncements = async () => {
+            try {
+                const snap = await db.collection('announcements')
+                    .orderBy('timestamp', 'desc').limit(30).get();
+                announcements.value = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            } catch(_) {}
+        };
 
         // 物品欄分類
         const filteredWarehouse = computed(() => {
@@ -3291,6 +3518,7 @@ createApp({
                 fbUser.value = user;
                 if (user) {
                     await initData(user.uid);
+                    await loadAnnouncements();
                     initAnimalStates();
                     if (!roamInterval) roamInterval = setInterval(moveAnimals, 4500);
                     setTimeout(() => {
@@ -3313,6 +3541,8 @@ createApp({
             users, currentUserId, currentUser, otherUsers,
             currentTab, letterForm, shopItems, displayIslandItems,
             visitingId, leaderboard, errorMsg, isDrawing, drawResult,
+            seaTab, seaSearch, seaFilteredUsers, seaUserStats,
+            announcements,
             animalStates, jumpStates, myLetters, unreadCount,
             getUserById, getDisplayName, getDisplayInitial, getUserAvatar, formatDate,
             switchUser, visitUser, stopVisiting, switchTab,
