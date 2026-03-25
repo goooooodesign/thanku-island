@@ -709,8 +709,9 @@
         .wall-avatar {
             width: 34px; height: 34px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 14px; font-weight: 800;
+            font-size: 14px; font-weight: 800; overflow: hidden; flex-shrink: 0;
         }
+        .wall-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .wall-avatar.from { background: var(--primary-lt); color: var(--primary-h); border: 2px solid var(--primary); }
         .wall-avatar.to   { background: #FFF0E8; color: var(--accent); border: 2px solid var(--accent); }
         .wall-arrow { font-size: 18px; }
@@ -765,7 +766,9 @@
             background: var(--primary-lt); border: 2px solid var(--primary);
             color: var(--primary-h); font-size: 18px; font-weight: 800;
             display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+            overflow: hidden;
         }
+        .sea-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .sea-info { flex: 1; }
         .sea-name { font-size: 15px; font-weight: 700; color: var(--text); }
         .sea-energy { font-size: 11px; color: var(--text-sub); margin-top: 3px; display: flex; align-items: center; gap: 6px; }
@@ -931,6 +934,40 @@
         .is-legend { display: flex; flex-direction: column; gap: 5px; }
         .is-leg { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; color: #8A7A6A; }
         .is-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+        /* 板塊剩餘顯示 */
+        .is-tile-status {
+            background: var(--surface); border: 2px solid var(--border);
+            border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        .is-tile-status.is-tile-full {
+            background: #FFF4EC; border-color: var(--accent);
+        }
+        .is-tile-label {
+            font-size: 11px; font-weight: 700; color: var(--text-sub);
+            margin-bottom: 8px; letter-spacing: 0.05em;
+        }
+        .is-tile-bar {
+            height: 6px; background: var(--border); border-radius: 99px;
+            overflow: hidden; margin-bottom: 8px;
+        }
+        .is-tile-fill {
+            height: 100%; background: var(--primary);
+            border-radius: 99px; transition: width 0.4s ease;
+        }
+        .is-tile-status.is-tile-full .is-tile-fill { background: var(--accent); }
+        .is-tile-count { display: flex; align-items: baseline; gap: 1px; }
+        .is-tile-used  { font-size: 22px; font-weight: 900; color: var(--primary); line-height: 1; }
+        .is-tile-status.is-tile-full .is-tile-used { color: var(--accent); }
+        .is-tile-sep   { font-size: 14px; font-weight: 500; color: var(--text-sub); }
+        .is-tile-total { font-size: 14px; font-weight: 700; color: var(--text); }
+        .is-tile-unit  { font-size: 11px; font-weight: 500; color: var(--text-sub); margin-left: 2px; }
+        .is-tile-hint  {
+            font-size: 11px; font-weight: 500; color: var(--accent);
+            margin-top: 8px; padding-top: 8px;
+            border-top: 1.5px dashed rgba(232,168,124,0.4);
+        }
 
         /* Canvas 主區域 */
         .island-canvas-area {
@@ -1460,7 +1497,11 @@
                 <i class="fa-solid fa-question"></i>
             </button>
             <div class="topbar-user" v-if="fbUser">
-                <img v-if="fbUser.photoURL" :src="fbUser.photoURL" class="topbar-avatar" :alt="fbUser.displayName">
+                <img v-if="currentUser?.avatarUrl"
+                     :src="currentUser.avatarUrl"
+                     :style="{objectPosition: (currentUser.avatarPosX||50)+'% '+(currentUser.avatarPosY||50)+'%'}"
+                     class="topbar-avatar" :alt="fbUser.displayName">
+                <img v-else-if="fbUser.photoURL" :src="fbUser.photoURL" class="topbar-avatar" :alt="fbUser.displayName">
                 <span class="topbar-username">{{ fbUser.displayName?.split(' ')[0] }}</span>
                 <button @click="signOut" class="topbar-signout" title="登出">登出</button>
             </div>
@@ -1600,6 +1641,23 @@
 
                 <!-- 桌機：左側工具欄 -->
                 <div class="island-sidebar">
+                    <!-- 板塊剩餘顯示 -->
+                    <div class="is-tile-status" :class="{'is-tile-full': tiles_used >= (currentUser?.tileCount||6)}">
+                        <div class="is-tile-label">🏝️ 島嶼板塊</div>
+                        <div class="is-tile-bar">
+                            <div class="is-tile-fill" :style="{width: Math.min(100, tiles_used/(currentUser?.tileCount||6)*100)+'%'}"></div>
+                        </div>
+                        <div class="is-tile-count">
+                            <span class="is-tile-used">{{ tiles_used }}</span>
+                            <span class="is-tile-sep"> / </span>
+                            <span class="is-tile-total">{{ currentUser?.tileCount || 6 }}</span>
+                            <span class="is-tile-unit"> 片</span>
+                        </div>
+                        <div v-if="tiles_used >= (currentUser?.tileCount||6)" class="is-tile-hint">
+                            收到感謝可獲得更多板塊 💌
+                        </div>
+                    </div>
+
                     <div class="is-panel">
                         <div class="is-sec">模式</div>
                         <button class="is-mode-btn" :class="{on: islandEditMode}" @click="islandEditMode=!islandEditMode">
@@ -1840,9 +1898,15 @@
                     <div v-for="letter in sortedLetters" :key="letter.id" class="wall-card">
                         <div class="wall-card-top">
                             <div class="wall-avatars">
-                                <div class="wall-avatar from">{{ getDisplayName(letter.from)[0] }}</div>
+                                <div class="wall-avatar from">
+                                    <img v-if="getUserAvatar(letter.from)" :src="getUserAvatar(letter.from).url" :style="{objectPosition: getUserAvatar(letter.from).posX+'% '+getUserAvatar(letter.from).posY+'%'}" :alt="getDisplayName(letter.from)">
+                                    <span v-else>{{ getDisplayName(letter.from)[0] }}</span>
+                                </div>
                                 <div class="wall-arrow">💌</div>
-                                <div class="wall-avatar to">{{ getDisplayName(letter.to)[0] }}</div>
+                                <div class="wall-avatar to">
+                                    <img v-if="getUserAvatar(letter.to)" :src="getUserAvatar(letter.to).url" :style="{objectPosition: getUserAvatar(letter.to).posX+'% '+getUserAvatar(letter.to).posY+'%'}" :alt="getDisplayName(letter.to)">
+                                    <span v-else>{{ getDisplayName(letter.to)[0] }}</span>
+                                </div>
                             </div>
                             <div class="wall-names">
                                 <span class="wall-from-name">{{ getDisplayName(letter.from) }}</span>
@@ -1877,7 +1941,10 @@
                         <div class="sea-rank-badge" :class="['rank-'+Math.min(index+1,4)]">
                             {{ index===0 ? '🥇' : index===1 ? '🥈' : index===2 ? '🥉' : String(index+1).padStart(2,'0') }}
                         </div>
-                        <div class="sea-avatar">{{ user.name[0] }}</div>
+                        <div class="sea-avatar">
+                            <img v-if="getUserAvatar(user.id)" :src="getUserAvatar(user.id).url" :style="{objectPosition: getUserAvatar(user.id).posX+'% '+getUserAvatar(user.id).posY+'%'}" :alt="user.name">
+                            <span v-else>{{ user.name[0] }}</span>
+                        </div>
                         <div class="sea-info">
                             <div class="sea-name">{{ user.name }}</div>
                             <div class="sea-energy">
@@ -1982,10 +2049,16 @@
     <div v-if="openLetter" class="letter-modal-overlay" @click.self="openLetter=null">
         <div class="letter-modal">
             <div class="letter-modal-header">
-                <div>
-                    <div class="letter-modal-from">💌 來自 {{ getDisplayName(openLetter.from) }}</div>
-                    <div class="letter-modal-time">{{ formatDate(openLetter.timestamp) }}
-                        <span v-if="openLetter.cardCost > 1" style="margin-left:8px;color:var(--accent);">×{{ openLetter.cardCost }} 感謝卡</span>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;background:var(--primary-lt);border:2px solid var(--primary);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:var(--primary-h);flex-shrink:0;">
+                        <img v-if="getUserAvatar(openLetter.from)" :src="getUserAvatar(openLetter.from).url" :style="{objectPosition: getUserAvatar(openLetter.from).posX+'% '+getUserAvatar(openLetter.from).posY+'%', width:'100%', height:'100%', objectFit:'cover'}" :alt="getDisplayName(openLetter.from)">
+                        <span v-else>{{ getDisplayName(openLetter.from)[0] }}</span>
+                    </div>
+                    <div>
+                        <div class="letter-modal-from">來自 {{ getDisplayName(openLetter.from) }}</div>
+                        <div class="letter-modal-time">{{ formatDate(openLetter.timestamp) }}
+                            <span v-if="openLetter.cardCost > 1" style="margin-left:8px;color:var(--accent);">×{{ openLetter.cardCost }} 感謝卡</span>
+                        </div>
                     </div>
                 </div>
                 <button @click="openLetter=null" class="help-close">✕</button>
@@ -2534,10 +2607,21 @@ createApp({
         const getDisplayName = (id) => {
             const u = users.value.find(u => u.id === id);
             if (u) return u.name;
-            if (id?.includes('@')) return id.split('@')[0];
-            return '神秘人';
+            if (id === currentUserId.value) return fbUser.value?.displayName || '我';
+            return '未知';
         };
         const getDisplayInitial = (id) => getDisplayName(id).charAt(0).toUpperCase();
+
+        // 取得使用者頭像（自訂頭像 > Google 頭像 > null）
+        const getUserAvatar = (id) => {
+            const u = users.value.find(u => u.id === id);
+            if (u?.avatarUrl) return { url: u.avatarUrl, posX: u.avatarPosX ?? 50, posY: u.avatarPosY ?? 50 };
+            // 如果是當前登入者，可以用 Google 頭像
+            if (id === currentUserId.value && fbUser.value?.photoURL) {
+                return { url: fbUser.value.photoURL, posX: 50, posY: 50 };
+            }
+            return null;
+        };
         const formatDate = (ts) => {
             const diff = Math.floor((Date.now() - ts) / 60000);
             if (diff < 1)    return 'Just now';
@@ -3230,7 +3314,7 @@ createApp({
             currentTab, letterForm, shopItems, displayIslandItems,
             visitingId, leaderboard, errorMsg, isDrawing, drawResult,
             animalStates, jumpStates, myLetters, unreadCount,
-            getUserById, getDisplayName, getDisplayInitial, formatDate,
+            getUserById, getDisplayName, getDisplayInitial, getUserAvatar, formatDate,
             switchUser, visitUser, stopVisiting, switchTab,
             sendLetter, adjustCardCost, markAsRead, toggleLike, isLiked,
             openLetter, openLetterModal,
