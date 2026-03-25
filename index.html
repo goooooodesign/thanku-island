@@ -32,8 +32,8 @@
     <!-- FontAwesome (圖示) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Google Fonts：M PLUS Rounded 1c 圓潤可愛字型 -->
-    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts：Noto Sans TC 思源黑體 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 
     <style>
         /* ===== CSS 變數 — Livly 奶油粉綠風格 ===== */
@@ -69,7 +69,7 @@
             background: #E8DDD0;
             min-height: 100vh; min-width: 320px;
             overflow-x: auto; overflow-y: auto;
-            font-family: "M PLUS Rounded 1c", "Noto Sans TC", sans-serif;
+            font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
             color: var(--text);
             -webkit-tap-highlight-color: transparent;
         }
@@ -104,7 +104,7 @@
             border-bottom: 2px solid var(--border);
         }
         .sidebar-logo-title {
-            font-size: 17px; font-weight: 800; color: var(--primary-h);
+            font-size: 17px; font-weight: 900; color: var(--primary-h); letter-spacing: -0.01em;
         }
         .sidebar-logo-sub {
             font-size: 10px; color: var(--text-sub);
@@ -125,7 +125,7 @@
             box-shadow: 0 4px 12px rgba(123,174,138,0.4);
         }
         .nav-btn i { width: 18px; text-align: center; font-size: 15px; }
-        .nav-label { font-size: 13px; font-weight: 700; }
+        .nav-label { font-size: 13px; font-weight: 500; }
 
         .sidebar-bottom {
             padding: 10px 10px;
@@ -224,7 +224,7 @@
         }
         @keyframes toast-in  { from { opacity:0; transform: translateX(-50%) translateY(10px); } }
         @keyframes toast-out { to   { opacity:0; transform: translateX(-50%) translateY(10px); } }
-        .sidebar-user-name { font-size: 14px; font-weight: 800; color: var(--text); }
+        .sidebar-user-name { font-size: 14px; font-weight: 700; color: var(--text); }
         .sidebar-user-level {
             display: inline-block; font-size: 10px; font-weight: 800;
             color: var(--primary-h); background: var(--primary-lt);
@@ -236,8 +236,8 @@
             background: rgba(255,255,255,0.6);
             padding: 4px 10px; border-radius: var(--radius-sm);
         }
-        .sidebar-stat-label { font-size: 10px; color: var(--text-sub); font-weight: 700; }
-        .sidebar-stat-val { font-size: 13px; font-weight: 800; color: var(--text); }
+        .sidebar-stat-label { font-size: 10px; color: var(--text-sub); font-weight: 400; letter-spacing: 0.02em; }
+        .sidebar-stat-val { font-size: 13px; font-weight: 700; color: var(--text); }
         .sidebar-stat-val i { font-size: 11px; margin-right: 3px; color: var(--accent); }
         .icon-primary { color: var(--primary) !important; }
 
@@ -258,7 +258,7 @@
             position: sticky; top: 0; z-index: 20;
             box-shadow: var(--shadow-sm);
         }
-        .topbar-title { font-size: 17px; font-weight: 800; color: var(--text); }
+        .topbar-title { font-size: 17px; font-weight: 900; color: var(--text); letter-spacing: -0.01em; }
         .topbar-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
         .topbar-btn {
             display: flex; align-items: center; gap: 6px;
@@ -372,7 +372,7 @@
         }
         .gacha-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
         .gacha-bg { position: absolute; right: -8px; bottom: -8px; font-size: 88px; opacity: 0.07; pointer-events: none; }
-        .gacha-title { font-size: 17px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+        .gacha-title { font-size: 17px; font-weight: 900; color: var(--text); margin-bottom: 6px; letter-spacing: -0.01em; }
         .gacha-desc { font-size: 13px; font-weight: 500; color: var(--text-sub); margin-bottom: 20px; line-height: 1.7; }
         .btn-row { display: flex; gap: 12px; flex-wrap: wrap; }
 
@@ -499,7 +499,7 @@
         .help-sec-header:hover { background: var(--primary-lt); }
         .help-sec-body { padding: 12px 16px; background: var(--surface); }
         .help-line {
-            font-size: 15px; color: var(--text); line-height: 1.9; font-weight: 500;
+            font-size: 15px; color: var(--text); line-height: 1.9; font-weight: 400;
             margin-bottom: 8px; padding-left: 4px;
         }
         .help-line:last-child { margin-bottom: 0; }
@@ -519,7 +519,7 @@
         }
         .login-logo { font-size: 64px; line-height: 1; margin-bottom: 16px;
             display: block; animation: float-island 4s ease-in-out infinite; }
-        .login-title { font-size: 28px; font-weight: 800; color: var(--text); margin: 0 0 4px; }
+        .login-title { font-size: 28px; font-weight: 900; color: var(--text); margin: 0 0 4px; letter-spacing: -0.02em; }
         .login-sub { font-size: 12px; color: var(--primary-h); font-weight: 700;
             letter-spacing: 0.12em; margin: 0 0 20px; }
         .login-desc { font-size: 13px; color: var(--text-sub); font-weight: 600;
@@ -641,7 +641,7 @@
         /* ===== Write 頁 ===== */
         .write-hero { text-align:center; padding: 32px 0 24px; }
         .write-hero-icon { font-size: 48px; margin-bottom: 8px; }
-        .write-hero-title { font-size: 22px; font-weight: 800; color: var(--text); }
+        .write-hero-title { font-size: 22px; font-weight: 900; color: var(--text); letter-spacing: -0.02em; }
         .write-hero-sub { font-size: 13px; color: var(--text-sub); margin-top: 6px; font-weight: 600; }
         .write-card {
             background: var(--surface); border: 2px solid var(--border);
@@ -690,7 +690,7 @@
         /* ===== Wall 佈告欄 ===== */
         .wall-hero { text-align:center; padding: 24px 0 20px; }
         .wall-hero-deco { font-size: 20px; margin-bottom: 4px; letter-spacing: 6px; }
-        .wall-hero-title { font-size: 22px; font-weight: 800; color: var(--text); }
+        .wall-hero-title { font-size: 22px; font-weight: 900; color: var(--text); letter-spacing: -0.02em; }
         .wall-hero-sub { font-size: 13px; color: var(--text-sub); margin-top: 4px; font-weight: 600; }
         .wall-grid {
             display: grid;
@@ -720,7 +720,7 @@
         .wall-to-name { color: var(--accent); font-weight: 800; }
         .wall-time { font-size: 10px; color: var(--text-sub); margin-top: 3px; }
         .wall-msg {
-            font-size: 13px; color: var(--text); line-height: 1.7;
+            font-size: 13px; color: var(--text); line-height: 1.8;
             background: var(--surface-2); border-radius: var(--radius);
             padding: 12px 14px; margin-bottom: 12px;
             border-left: 3px solid var(--primary);
@@ -740,7 +740,7 @@
         /* ===== Sea群島 ===== */
         .sea-hero { text-align:center; padding: 24px 0 20px; }
         .sea-hero-icon { font-size: 48px; margin-bottom: 6px; animation: float-island 4s ease-in-out infinite; }
-        .sea-hero-title { font-size: 22px; font-weight: 800; color: var(--text); }
+        .sea-hero-title { font-size: 22px; font-weight: 900; color: var(--text); letter-spacing: -0.02em; }
         .sea-hero-sub { font-size: 13px; color: var(--text-sub); margin-top: 4px; font-weight: 600; }
         .sea-list { display: flex; flex-direction: column; gap: 12px; max-width: 640px; margin: 0 auto; }
         .sea-item {
@@ -767,7 +767,7 @@
             display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
         .sea-info { flex: 1; }
-        .sea-name { font-size: 15px; font-weight: 800; color: var(--text); }
+        .sea-name { font-size: 15px; font-weight: 700; color: var(--text); }
         .sea-energy { font-size: 11px; color: var(--text-sub); margin-top: 3px; display: flex; align-items: center; gap: 6px; }
         .sea-energy i { color: var(--primary); }
         .sea-island-tag { background: var(--primary-lt); color: var(--primary-h); padding: 1px 8px; border-radius: var(--radius-pill); font-size: 10px; font-weight: 800; }
@@ -886,41 +886,41 @@
         }
         .island-sidebar::-webkit-scrollbar { width: 3px; }
         .island-sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-        .is-panel { display: flex; flex-direction: column; gap: 3px; }
-        .is-sec { font-size: 9px; font-weight: 800; color: var(--sub); letter-spacing: 0.1em; margin: 8px 0 4px; }
+        .is-panel { display: flex; flex-direction: column; gap: 4px; }
+        .is-sec { font-size: 11px; font-weight: 800; color: var(--sub); letter-spacing: 0.08em; margin: 10px 0 5px; }
         .is-sec:first-child { margin-top: 0; }
         .is-mode-btn {
-            width: 100%; padding: 9px; border-radius: 12px;
-            font-size: 11px; font-weight: 800; cursor: pointer;
+            width: 100%; padding: 10px; border-radius: 12px;
+            font-size: 13px; font-weight: 800; cursor: pointer;
             border: 2px solid var(--primary); background: var(--primary-lt); color: #3A7A50;
             transition: all 0.15s;
         }
         .is-mode-btn.on { background: var(--primary); color: #fff; box-shadow: 0 3px 10px rgba(91,154,112,0.4); }
         .is-btn {
-            width: 100%; display: flex; align-items: center; gap: 7px;
-            padding: 7px 9px; border-radius: 10px;
-            font-size: 11px; font-weight: 700; color: var(--text);
+            width: 100%; display: flex; align-items: center; gap: 8px;
+            padding: 9px 11px; border-radius: 10px;
+            font-size: 13px; font-weight: 700; color: var(--text);
             border: 2px solid transparent; background: transparent;
             cursor: pointer; transition: all 0.13s; text-align: left;
         }
         .is-btn:hover { background: #F0EAE0; }
         .is-btn.active { background: var(--primary); color: #fff; border-color: var(--green-d,#5A9A70); box-shadow: 0 2px 8px rgba(88,168,112,0.35); }
-        .is-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
-        .is-name { font-size: 11px; font-weight: 800; display: block; }
-        .is-sub  { font-size: 9px; opacity: 0.65; display: block; }
-        .is-sz-row { display: flex; gap: 4px; }
+        .is-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+        .is-name { font-size: 13px; font-weight: 800; display: block; }
+        .is-sub  { font-size: 11px; opacity: 0.65; display: block; margin-top: 1px; }
+        .is-sz-row { display: flex; gap: 5px; }
         .is-sz {
-            flex: 1; padding: 5px 0; border-radius: 7px;
-            font-size: 10px; font-weight: 800;
+            flex: 1; padding: 7px 0; border-radius: 8px;
+            font-size: 13px; font-weight: 800;
             border: 2px solid var(--border); background: #fff;
             cursor: pointer; color: var(--text); transition: all 0.13s;
         }
         .is-sz.active { background: var(--primary); color: #fff; border-color: var(--green-d,#5A9A70); }
         .is-act {
-            width: 100%; padding: 7px 9px; border-radius: 10px;
-            font-size: 10px; font-weight: 800; cursor: pointer;
+            width: 100%; padding: 9px 11px; border-radius: 10px;
+            font-size: 12px; font-weight: 800; cursor: pointer;
             border: 2px solid var(--border); background: var(--surface);
-            color: var(--text); transition: all 0.13s; margin-bottom: 2px;
+            color: var(--text); transition: all 0.13s; margin-bottom: 3px;
         }
         .is-act.add    { border-color: var(--primary); color: #2A7A50; background: var(--primary-lt); }
         .is-act.add:hover { background: var(--primary); color: #fff; }
@@ -928,9 +928,9 @@
         .is-act.center:hover { background: #D4A840; color: #fff; }
         .is-act.reset  { border-color: var(--alert); color: #A04030; background: var(--alert-lt); }
         .is-act.reset:hover { background: var(--alert); color: #fff; }
-        .is-legend { display: flex; flex-direction: column; gap: 4px; }
-        .is-leg { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; color: #8A7A6A; }
-        .is-dot { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+        .is-legend { display: flex; flex-direction: column; gap: 5px; }
+        .is-leg { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; color: #8A7A6A; }
+        .is-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
 
         /* Canvas 主區域 */
         .island-canvas-area {
@@ -1070,7 +1070,7 @@
         .warehouse-item:hover { background: var(--primary-lt); border-color: var(--primary); transform: translateY(-2px); }
         .warehouse-item-icon { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; }
         .warehouse-item-icon img { width: 52px; height: 52px; object-fit: contain; }
-        .warehouse-item-name { font-size: 10px; color: var(--text); text-align: center; font-weight: 700; line-height: 1.3; }
+        .warehouse-item-name { font-size: 11px; color: var(--text); text-align: center; font-weight: 700; line-height: 1.3; }
 
         /* 物品欄分類 */
         .warehouse-filter { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 8px 0; flex-shrink: 0; }
@@ -1099,6 +1099,81 @@
         .reward-card-icon { font-size: 48px; margin-bottom: 10px; }
         .reward-card-title { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
         .reward-card-desc { font-size: 12px; color: var(--text-sub); font-weight: 600; line-height: 1.6; }
+
+        /* ── 信件彈窗 ── */
+        .letter-modal-overlay {
+            position: fixed; inset: 0; z-index: 600;
+            background: rgba(50,40,30,0.5); backdrop-filter: blur(6px);
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .letter-modal {
+            background: var(--surface); border-radius: var(--radius-lg);
+            border: 2px solid var(--border); width: 100%; max-width: 480px;
+            box-shadow: 0 20px 60px rgba(60,50,40,0.25);
+            animation: popReveal 0.35s cubic-bezier(0.175,0.885,0.32,1.275);
+            overflow: hidden;
+        }
+        .letter-modal-header {
+            background: linear-gradient(135deg, var(--primary-lt), #FFF8EC);
+            padding: 20px 24px 16px; border-bottom: 2px solid var(--border);
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+        .letter-modal-from { font-size: 13px; font-weight: 800; color: var(--primary-h); }
+        .letter-modal-time { font-size: 11px; color: var(--text-sub); margin-top: 3px; }
+        .letter-modal-body { padding: 24px; }
+        .letter-modal-content {
+            font-size: 15px; color: var(--text); line-height: 1.9; font-weight: 400;
+            background: var(--surface-2); border-radius: var(--radius);
+            padding: 16px 18px; border-left: 4px solid var(--primary);
+            margin-bottom: 20px;
+        }
+        .letter-modal-reward { display: flex; gap: 10px; flex-wrap: wrap; }
+        .letter-modal-reward-item {
+            display: flex; align-items: center; gap: 6px;
+            background: var(--primary-lt); border: 2px solid var(--primary);
+            border-radius: var(--radius-pill); padding: 6px 14px;
+            font-size: 13px; font-weight: 800; color: var(--primary-h);
+        }
+
+        /* ── 頭像上傳彈窗 ── */
+        .avatar-modal-overlay {
+            position: fixed; inset: 0; z-index: 700;
+            background: rgba(50,40,30,0.55); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .avatar-modal {
+            background: var(--surface); border-radius: var(--radius-lg);
+            border: 2px solid var(--border); width: 100%; max-width: 420px;
+            box-shadow: 0 20px 60px rgba(60,50,40,0.25);
+            animation: popReveal 0.35s cubic-bezier(0.175,0.885,0.32,1.275);
+            overflow: hidden;
+        }
+        .avatar-modal-header {
+            padding: 18px 20px 14px; border-bottom: 2px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--surface-2);
+        }
+        .avatar-modal-title { font-size: 16px; font-weight: 800; color: var(--text); }
+        .avatar-modal-body { padding: 20px; }
+        .avatar-preview-wrap {
+            position: relative; width: 120px; height: 120px;
+            border-radius: 50%; overflow: hidden; margin: 0 auto 16px;
+            border: 3px solid var(--primary); background: var(--surface-2);
+        }
+        .avatar-preview-wrap img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-preview-placeholder {
+            width: 100%; height: 100%; display: flex; align-items: center;
+            justify-content: center; font-size: 48px; color: var(--primary);
+        }
+        .avatar-upload-zone {
+            border: 2px dashed var(--border); border-radius: var(--radius);
+            padding: 20px; text-align: center; cursor: pointer; transition: all 0.15s;
+            background: var(--surface-2); margin-bottom: 14px;
+        }
+        .avatar-upload-zone:hover { border-color: var(--primary); background: var(--primary-lt); }
+        .avatar-upload-hint { font-size: 12px; color: var(--text-sub); margin-top: 6px; font-weight: 600; }
+        .avatar-range-label { font-size: 11px; color: var(--text-sub); font-weight: 700; margin-bottom: 4px; display: block; }
+        .avatar-range { width: 100%; accent-color: var(--primary); margin-bottom: 12px; }
         .warehouse-item-type { font-size: 9px; }
 
 
@@ -1200,7 +1275,7 @@
         .gacha-result img { width: 160px; height: 160px; object-fit: contain; filter: drop-shadow(0 6px 16px rgba(0,0,0,0.12)); margin-bottom: 20px; }
         .gacha-result .emoji-big { font-size: 100px; line-height: 1; margin-bottom: 20px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.1)); }
         .gacha-partner-label { font-size: 11px; color: var(--primary-h); font-weight: 800; letter-spacing: 0.14em; margin-bottom: 6px; }
-        .gacha-partner-name { font-size: 26px; font-weight: 800; color: var(--text); margin-bottom: 32px; }
+        .gacha-partner-name { font-size: 26px; font-weight: 900; color: var(--text); margin-bottom: 32px; letter-spacing: -0.02em; }
         @keyframes popReveal {
             0%   { transform: scale(0.3) translateY(40px); opacity: 0; }
             60%  { transform: scale(1.08) translateY(-8px); opacity: 1; }
@@ -1333,12 +1408,14 @@
         </div>
 
         <div class="sidebar-user" v-if="currentUser">
-            <div class="sidebar-avatar-wrap" @click="triggerAvatarUpload" title="點擊更換頭像">
-                <img v-if="currentUser.avatarUrl" :src="currentUser.avatarUrl" class="sidebar-avatar-img" alt="頭像">
+            <div class="sidebar-avatar-wrap" @click="showAvatarModal=true" title="點擊更換頭像">
+                <img v-if="currentUser.avatarUrl" :src="currentUser.avatarUrl"
+                     :style="{objectPosition: (currentUser.avatarPosX||50)+'% '+(currentUser.avatarPosY||50)+'%'}"
+                     class="sidebar-avatar-img" alt="頭像">
                 <div v-else class="sidebar-avatar">{{ getDisplayInitial(currentUserId) }}</div>
                 <div class="sidebar-avatar-edit"><i class="fa-solid fa-camera"></i></div>
             </div>
-            <input type="file" ref="avatarInput" accept="image/*" style="display:none;" @change="onAvatarChange">
+            <input type="file" ref="avatarInput" accept="image/*" style="display:none;" @change="onAvatarFileChange">
             <div class="sidebar-user-name">{{ currentUser.name }}</div>
             <div class="sidebar-user-level">Level {{ currentUser.level || 1 }}</div>
             <div class="sidebar-stats">
@@ -1838,8 +1915,8 @@
                     </div>
                     <div v-else class="letters-grid">
                         <div v-for="letter in myLetters" :key="letter.id"
-                             @click="markAsRead(letter)"
-                             class="letter-card" :class="{ unread: !letter.read }">
+                             @click="openLetterModal(letter)"
+                             class="letter-card" :class="{ unread: !letter.read }" style="cursor:pointer;">
                             <div class="letter-header">
                                 <div>
                                     <div class="letter-from">
@@ -1850,10 +1927,10 @@
                                 </div>
                                 <div v-if="letter.cardCost > 1" class="letter-multi-badge">×{{ letter.cardCost }}</div>
                             </div>
-                            <div class="letter-body">{{ letter.content }}</div>
+                            <div class="letter-body" style="overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">{{ letter.content }}</div>
                             <div class="reward-row">
                                 <span><i class="fa-solid fa-bolt"></i> +{{ (letter.cardCost || 1) * 100 }} 能量</span>
-                                <span class="reward-coins">🏝️ +1 島嶼板塊</span>
+                                <span class="reward-coins">🏝️ +{{ letter.cardCost||1 }} 板塊</span>
                             </div>
                         </div>
                     </div>
@@ -1900,6 +1977,63 @@
 
     <!-- Bottom Nav（保留 HTML 但 CSS 隱藏） -->
     <nav class="bottom-nav"></nav>
+
+    <!-- 信件彈窗 -->
+    <div v-if="openLetter" class="letter-modal-overlay" @click.self="openLetter=null">
+        <div class="letter-modal">
+            <div class="letter-modal-header">
+                <div>
+                    <div class="letter-modal-from">💌 來自 {{ getDisplayName(openLetter.from) }}</div>
+                    <div class="letter-modal-time">{{ formatDate(openLetter.timestamp) }}
+                        <span v-if="openLetter.cardCost > 1" style="margin-left:8px;color:var(--accent);">×{{ openLetter.cardCost }} 感謝卡</span>
+                    </div>
+                </div>
+                <button @click="openLetter=null" class="help-close">✕</button>
+            </div>
+            <div class="letter-modal-body">
+                <div class="letter-modal-content">{{ openLetter.content }}</div>
+                <div class="letter-modal-reward">
+                    <div class="letter-modal-reward-item"><i class="fa-solid fa-bolt"></i> +{{ (openLetter.cardCost||1)*100 }} 能量</div>
+                    <div class="letter-modal-reward-item">🏝️ +{{ openLetter.cardCost||1 }} 板塊（信箱領取）</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 頭像上傳彈窗 -->
+    <div v-if="showAvatarModal" class="avatar-modal-overlay" @click.self="showAvatarModal=false">
+        <div class="avatar-modal">
+            <div class="avatar-modal-header">
+                <span class="avatar-modal-title">🖼️ 更換頭像</span>
+                <button @click="showAvatarModal=false" class="help-close">✕</button>
+            </div>
+            <div class="avatar-modal-body">
+                <!-- 預覽 -->
+                <div class="avatar-preview-wrap">
+                    <img v-if="avatarPreviewUrl" :src="avatarPreviewUrl"
+                         :style="{objectPosition: avatarPosX+'% '+avatarPosY+'%'}" alt="預覽">
+                    <div v-else class="avatar-preview-placeholder">{{ getDisplayInitial(currentUserId) }}</div>
+                </div>
+                <!-- 位置調整（上傳後才顯示）-->
+                <div v-if="avatarPreviewUrl">
+                    <span class="avatar-range-label">← 左右位置 →</span>
+                    <input type="range" class="avatar-range" v-model="avatarPosX" min="0" max="100">
+                    <span class="avatar-range-label">↑ 上下位置 ↓</span>
+                    <input type="range" class="avatar-range" v-model="avatarPosY" min="0" max="100">
+                </div>
+                <!-- 上傳區 -->
+                <div class="avatar-upload-zone" @click="$refs.avatarInput.click()">
+                    <i class="fa-solid fa-cloud-arrow-up" style="font-size:24px;color:var(--primary);margin-bottom:6px;display:block;"></i>
+                    <div style="font-weight:800;color:var(--text);">點擊選擇圖片</div>
+                    <div class="avatar-upload-hint">支援 JPG、PNG，5MB 以內</div>
+                </div>
+                <input type="file" ref="avatarInput" accept="image/*" style="display:none;" @change="onAvatarFileChange">
+                <button v-if="avatarPreviewUrl" @click="saveAvatar" class="btn-primary" style="width:100%;">
+                    <i class="fa-solid fa-check"></i> 儲存頭像
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- 說明彈窗 -->
     <div v-if="helpTab || firstLoginHelp" class="help-overlay" @click.self="helpTab=null; firstLoginHelp=false">
@@ -2488,6 +2622,38 @@ createApp({
             switchTab('wall');
         };
 
+        // ── 信件彈窗 ──
+        const openLetter = ref(null);
+        const openLetterModal = (letter) => {
+            openLetter.value = letter;
+            markAsRead(letter);
+        };
+
+        // ── 頭像上傳彈窗 ──
+        const showAvatarModal = ref(false);
+        const avatarPreviewUrl = ref('');
+        const avatarPosX = ref(50);
+        const avatarPosY = ref(50);
+
+        const onAvatarFileChange = (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) { alert('圖片太大！請選擇 5MB 以內的圖片。'); return; }
+            const reader = new FileReader();
+            reader.onload = (ev) => { avatarPreviewUrl.value = ev.target.result; };
+            reader.readAsDataURL(file);
+        };
+
+        const saveAvatar = async () => {
+            if (!avatarPreviewUrl.value || !currentUser.value) return;
+            currentUser.value.avatarUrl  = avatarPreviewUrl.value;
+            currentUser.value.avatarPosX = parseInt(avatarPosX.value);
+            currentUser.value.avatarPosY = parseInt(avatarPosY.value);
+            await saveData();
+            showAvatarModal.value   = false;
+            avatarPreviewUrl.value  = '';
+        };
+
         const markAsRead = (letter) => {
             if (!letter.read) { letter.read = true; saveData(); }
         };
@@ -3067,6 +3233,8 @@ createApp({
             getUserById, getDisplayName, getDisplayInitial, formatDate,
             switchUser, visitUser, stopVisiting, switchTab,
             sendLetter, adjustCardCost, markAsRead, toggleLike, isLiked,
+            openLetter, openLetterModal,
+            showAvatarModal, avatarPreviewUrl, avatarPosX, avatarPosY, onAvatarFileChange, saveAvatar,
             recipientInput, showSuggestions, filteredSuggestions,
             onRecipientInput, selectRecipient, hideSuggestions,
             buyItem: () => {}, triggerGacha, triggerGacha10, finishDraw, finishDraw10, draw10Results, handleImageError, forceReset,
