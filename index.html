@@ -2746,7 +2746,7 @@ createApp({
                     letters: JSON.parse(JSON.stringify(letters.value)),
                     updatedAt: Date.now()
                 });
-                // 同步更新公開 profile（頭像、名稱等）
+                // 同步更新公開 profile（含 island items 供訪島用）
                 const me = users.value.find(u => u.id === uid);
                 if (me) {
                     await db.collection('profiles').doc(uid).set({
@@ -2757,6 +2757,7 @@ createApp({
                         avatarPosX: me.avatarPosX ?? 50,
                         avatarPosY: me.avatarPosY ?? 50,
                         energy:     me.energy || 0,
+                        island:     JSON.parse(JSON.stringify(me.island || [])),
                         updatedAt:  Date.now(),
                     }, { merge: true });
                 }
@@ -2851,6 +2852,54 @@ createApp({
                     }
                 } catch(_te) {}
 
+                // ── 讀取 inbox，合併新信件和板塊道具 ──
+                try {
+                    const inboxSnap = await db.collection('inboxes').doc(uid)
+                        .collection('items').orderBy('timestamp', 'desc').get();
+                    if (!inboxSnap.empty) {
+                        const me = users.value.find(u => u.id === uid);
+                        const existingLetterIds = new Set(letters.value.map(l => String(l.id)));
+                        for (const docSnap of inboxSnap.docs) {
+                            const item = { id: docSnap.id, ...docSnap.data() };
+                            if (item.type === 'letter') {
+                                // 合併新信件（避免重複）
+                                if (!existingLetterIds.has(item.id)) {
+                                    letters.value.push({
+                                        id: item.id,
+                                        from: item.from,
+                                        to: uid,
+                                        content: item.content,
+                                        timestamp: item.timestamp,
+                                        cardCost: item.cardCost || 1,
+                                        likes: [],
+                                        read: item.read || false,
+                                    });
+                                    // 加入能量和板塊道具（第一次讀取時）
+                                    if (me && !item.processed) {
+                                        me.energy  = (me.energy  || 0) + (item.energy || 0);
+                                        me.shells  = (me.shells  || 0) + (item.bonus  || 0);
+                                        if (!me.rewards) me.rewards = [];
+                                        for (let i = 0; i < (item.tiles || 1); i++) {
+                                            me.rewards.push({
+                                                id: `${item.id}_${i}`,
+                                                type: 'tile',
+                                                title: '🏝️ 獲得島嶼板塊！',
+                                                desc: `${item.fromName || '有人'} 送了你感謝，帶來 1 片新的板塊！`,
+                                                claimed: false
+                                            });
+                                        }
+                                        // 標記已處理，避免重複加能量
+                                        await db.collection('inboxes').doc(uid)
+                                            .collection('items').doc(docSnap.id)
+                                            .update({ processed: true });
+                                    }
+                                }
+                            }
+                        }
+                        await saveData();
+                    }
+                } catch(_ib) {}
+
             } catch(e) {
                 errorMsg.value = '資料載入失敗，請重新整理。';
             }
@@ -2943,46 +2992,50 @@ createApp({
             if (id === currentUserId.value) return;
             visitingId.value = id;
             visitingIslandItems.value = [];
-            switchTab('home');
 
-            // 載入對方的 tiles
-            try {
-                const tilesDoc = await db.collection('tiles').doc(id).get();
-                if (tilesDoc.exists && tilesDoc.data().tiles?.length) {
-                    window.islandEngine?.importTiles(tilesDoc.data().tiles);
-                    setTimeout(() => window.islandEngine?.center(), 200);
-                } else {
-                    window.islandEngine?.importTiles([]);
-                }
-            } catch(_) {
+            // 先切到 home，讓 canvas DOM ready
+            switchTab('home');
+            await new Promise(r => setTimeout(r, 300));
+
+            // 並行讀取對方的 tiles（規則需允許讀）和 island items（從 profiles 公開讀）
+            const [tilesResult, profileResult] = await Promise.allSettled([
+                db.collection('tiles').doc(id).get(),
+                db.collection('profiles').doc(id).get(),
+            ]);
+
+            // 載入地形
+            if (tilesResult.status === 'fulfilled' && tilesResult.value.exists) {
+                const td = tilesResult.value.data();
+                window.islandEngine?.importTiles(td.tiles?.length ? td.tiles : []);
+            } else {
                 window.islandEngine?.importTiles([]);
             }
 
-            // 載入對方的 island items
-            try {
-                const userDoc = await db.collection('users').doc(id).get();
-                if (userDoc.exists) {
-                    const data = userDoc.data();
-                    const targetUser = (data.users || []).find(u => u.id === id);
-                    visitingIslandItems.value = targetUser?.island || [];
-                }
-            } catch(_) {}
+            // 載入島嶼物品（從 profiles）
+            if (profileResult.status === 'fulfilled' && profileResult.value.exists) {
+                visitingIslandItems.value = profileResult.value.data().island || [];
+            }
 
-            setTimeout(() => window.initIslandCanvas?.(), 100);
+            // 重繪 canvas 並置中
+            window.initIslandCanvas?.();
+            setTimeout(() => window.islandEngine?.center(), 200);
         };
-        const stopVisiting = () => {
+        const stopVisiting = async () => {
             visitingId.value = null;
             visitingIslandItems.value = [];
-            setTimeout(() => {
-                window.islandEngine?.importTiles([]);
+            // 重新載入自己的地形
+            window.islandEngine?.importTiles([]);
+            try {
                 if (fbUser.value) {
-                    db.collection('tiles').doc(fbUser.value.uid).get().then(doc => {
-                        if (doc.exists && doc.data().tiles?.length) {
-                            window.islandEngine?.importTiles(doc.data().tiles);
-                            setTimeout(() => window.islandEngine?.center(), 100);
-                        }
-                    });
+                    const doc = await db.collection('tiles').doc(fbUser.value.uid).get();
+                    if (doc.exists && doc.data().tiles?.length) {
+                        window.islandEngine?.importTiles(doc.data().tiles);
+                    }
                 }
+            } catch(_) {}
+            setTimeout(() => {
+                window.initIslandCanvas?.();
+                setTimeout(() => window.islandEngine?.center(), 300);
             }, 50);
         };
         const switchTab  = (tab) => {
@@ -3024,52 +3077,26 @@ createApp({
                 sender.tileCount = (sender.tileCount || 6) + 1;
             }
 
-            // ── 更新收件人 Firestore 文件 ──
+            // ── 寫入收件人的 inbox（任何人可寫，本人可讀）──
             try {
-                const receiverDoc = await db.collection('users').doc(toId).get();
-                if (receiverDoc.exists) {
-                    const rData    = receiverDoc.data();
-                    const rUsers   = JSON.parse(JSON.stringify(rData.users || []));
-                    const rLetters = JSON.parse(JSON.stringify(rData.letters || []));
-
-                    // 找到或建立收件人的 user 物件
-                    let rIdx = rUsers.findIndex(u => u.id === toId);
-                    if (rIdx < 0) {
-                        rUsers.push({ id: toId });
-                        rIdx = rUsers.length - 1;
-                    }
-
-                    // 更新能量、貝殼幣、板塊道具
-                    const bonus = (Math.floor(Math.random() * 450) + 50) * cost;
-                    rUsers[rIdx].shells  = (rUsers[rIdx].shells  || 0) + bonus;
-                    rUsers[rIdx].energy  = (rUsers[rIdx].energy  || 0) + 100 * cost;
-                    if (!rUsers[rIdx].rewards) rUsers[rIdx].rewards = [];
-                    for (let i = 0; i < cost; i++) {
-                        rUsers[rIdx].rewards.push({
-                            id: ts + i, type: 'tile',
-                            title: '🏝️ 獲得島嶼板塊！',
-                            desc: `${sender.name} 送了你感謝，帶來 1 片新的板塊！快去擴張你的小島吧 🌟`,
-                            claimed: false
-                        });
-                    }
-
-                    // 寫入信件到收件人信箱
-                    rLetters.push({
-                        id: ts, from: sender.id, to: toId,
-                        content: letterForm.content,
-                        timestamp: ts, cardCost: cost, likes: [], read: false
-                    });
-
-                    // 全量覆寫（不用 merge，避免部分欄位殘留舊值）
-                    await db.collection('users').doc(toId).set({
-                        ...rData,
-                        users: rUsers,
-                        letters: rLetters,
-                        updatedAt: ts
-                    });
-                }
+                const bonus = (Math.floor(Math.random() * 450) + 50) * cost;
+                const inboxItem = {
+                    type: 'letter',
+                    from: sender.id,
+                    fromName: sender.name || '',
+                    content: letterForm.content,
+                    timestamp: ts,
+                    cardCost: cost,
+                    energy: 100 * cost,
+                    bonus,
+                    tiles: cost,      // 板塊數量
+                    read: false,
+                    claimed: false,   // 板塊是否已領取
+                };
+                await db.collection('inboxes').doc(toId)
+                    .collection('items').add(inboxItem);
             } catch(e) {
-                console.warn('更新收件人失敗', e);
+                console.warn('寫入收件人 inbox 失敗', e);
             }
 
             // ── 寫入全站 letters（佈告欄）──
@@ -3970,8 +3997,7 @@ window.initIslandCanvas = function(){
     const c=document.getElementById('island-canvas'); if(!c){ setTimeout(tryInit,100); return; }
     const p=c.parentElement; if(!p||p.clientWidth===0){ setTimeout(tryInit,100); return; }
     hCv=c; hCx=c.getContext('2d');
-    // Firestore 地形由 initData 透過 importTiles 載入，這裡只在完全沒資料時才 fallback 到 localStorage
-    if(!tiles.size) load();
+    // 注意：不在這裡 load()，地形完全由外部（initData / visitUser）透過 importTiles 控制
     hResize();
     if(window._hRO) window._hRO.disconnect();
     window._hRO=new ResizeObserver(hResize); window._hRO.observe(p);
