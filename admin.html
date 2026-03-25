@@ -1,225 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>感恩小島 — 管理後台</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyC-JR80af8Vx7SHmyDUkGFVFD9HzlmpP8w",authDomain:"thanku-island-30428.firebaseapp.com",projectId:"thanku-island-30428",storageBucket:"thanku-island-30428.firebasestorage.app",messagingSenderId:"245260789354",appId:"1:245260789354:web:dfc729c0c0ea7cc4360c13"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore(),auth=firebase.auth();
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-    --bg: #F4F6F9; --surface: #FFFFFF; --surface-2: #F8F9FC;
-    --border: #E2E8F0; --text: #1A202C; --text-sub: #718096;
-    --primary: #5A9A70; --primary-h: #4A8A60; --primary-lt: #EAF5EC;
-    --accent: #D4884A; --alert: #E53E3E; --alert-lt: #FFF5F5;
-    --purple: #6A5ACD; --purple-lt: #F0EAF8;
-    --gold: #C8A84B; --gold-lt: #FFFBEB;
-    --radius: 10px; --radius-lg: 16px; --shadow: 0 4px 20px rgba(0,0,0,0.08);
-}
-body { font-family: "Noto Sans TC", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-button { font-family: inherit; cursor: pointer; border: none; background: none; }
-input, textarea, select { font-family: inherit; outline: none; }
-.login-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#E8F5E9,#EEF4FF,#FFF8EC); }
-.login-card { background:var(--surface); border-radius:24px; padding:48px 40px; text-align:center; max-width:380px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.12); }
-.login-logo { font-size:56px; display:block; margin-bottom:16px; }
-.login-title { font-size:24px; font-weight:900; color:var(--text); margin-bottom:4px; }
-.login-sub { font-size:13px; color:var(--text-sub); margin-bottom:8px; }
-.login-badge { display:inline-flex; align-items:center; gap:6px; background:var(--gold-lt); border:1.5px solid var(--gold); color:var(--gold); border-radius:99px; padding:4px 12px; font-size:11px; font-weight:800; margin-bottom:28px; }
-.login-error { color:var(--alert); font-size:13px; margin-top:12px; font-weight:600; }
-.google-btn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:14px 24px; border-radius:99px; background:var(--surface); border:2px solid var(--border); font-size:14px; font-weight:800; color:var(--text); cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,0.08); transition:all 0.2s; }
-.google-btn:hover { border-color:#4285F4; box-shadow:0 6px 20px rgba(66,133,244,0.2); transform:translateY(-1px); }
-.access-denied { color:var(--alert); font-size:14px; margin-top:16px; font-weight:700; }
-.admin-layout { display:flex; min-height:100vh; }
-.admin-sidebar { width:240px; flex-shrink:0; background:var(--surface); border-right:2px solid var(--border); display:flex; flex-direction:column; position:fixed; top:0; left:0; height:100vh; z-index:10; overflow-y:auto; }
-.admin-main { margin-left:240px; flex:1; padding:28px; min-height:100vh; }
-.admin-logo { padding:24px 20px 16px; border-bottom:2px solid var(--border); }
-.admin-logo-title { font-size:16px; font-weight:900; color:var(--primary-h); }
-.admin-logo-sub { font-size:10px; color:var(--text-sub); font-weight:700; letter-spacing:0.08em; margin-top:2px; }
-.admin-logo-badge { display:inline-flex; align-items:center; gap:4px; margin-top:8px; background:var(--gold-lt); border:1.5px solid var(--gold); color:var(--gold); border-radius:99px; padding:3px 10px; font-size:10px; font-weight:800; }
-.admin-nav { padding:12px 10px; flex:1; }
-.admin-nav-section { font-size:9px; font-weight:800; color:var(--text-sub); letter-spacing:0.12em; padding:10px 10px 4px; }
-.admin-nav-btn { width:100%; display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:var(--radius); font-size:13px; font-weight:600; color:var(--text-sub); transition:all 0.15s; text-align:left; margin-bottom:2px; }
-.admin-nav-btn:hover { background:var(--surface-2); color:var(--text); }
-.admin-nav-btn.active { background:var(--primary-lt); color:var(--primary-h); font-weight:800; }
-.admin-nav-btn i { width:18px; text-align:center; font-size:14px; }
-.admin-sidebar-bottom { padding:12px 10px; border-top:2px solid var(--border); }
-.admin-user-row { display:flex; align-items:center; gap:10px; padding:8px 10px; }
-.admin-user-avatar { width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid var(--primary); }
-.admin-user-name { font-size:12px; font-weight:700; color:var(--text); }
-.admin-signout { font-size:11px; color:var(--text-sub); padding:4px 10px; border-radius:99px; transition:all 0.15s; }
-.admin-signout:hover { background:var(--alert-lt); color:var(--alert); }
-.page-header { margin-bottom:24px; }
-.page-title { font-size:24px; font-weight:900; color:var(--text); letter-spacing:-0.02em; }
-.page-sub { font-size:13px; color:var(--text-sub); margin-top:4px; font-weight:500; }
-.stats-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:16px; margin-bottom:28px; }
-.stat-card { background:var(--surface); border-radius:var(--radius-lg); border:2px solid var(--border); padding:20px; transition:all 0.18s; }
-.stat-card:hover { border-color:var(--primary); transform:translateY(-2px); box-shadow:var(--shadow); }
-.stat-icon { font-size:28px; margin-bottom:10px; }
-.stat-val { font-size:28px; font-weight:900; color:var(--text); line-height:1; }
-.stat-label { font-size:12px; color:var(--text-sub); font-weight:600; margin-top:4px; }
-.card { background:var(--surface); border-radius:var(--radius-lg); border:2px solid var(--border); padding:24px; margin-bottom:20px; }
-.card-title { font-size:16px; font-weight:800; color:var(--text); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
-.card-title i { color:var(--primary); }
-.admin-table { width:100%; border-collapse:collapse; }
-.admin-table th { text-align:left; padding:10px 14px; font-size:11px; font-weight:800; color:var(--text-sub); letter-spacing:0.08em; border-bottom:2px solid var(--border); background:var(--surface-2); }
-.admin-table td { padding:12px 14px; font-size:13px; font-weight:500; color:var(--text); border-bottom:1px solid var(--border); vertical-align:middle; }
-.admin-table tr:hover td { background:var(--surface-2); }
-.admin-table tr:last-child td { border-bottom:none; }
-.user-row-avatar { width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid var(--primary); display:inline-block; vertical-align:middle; margin-right:8px; }
-.user-initial-badge { width:32px; height:32px; border-radius:50%; background:var(--primary-lt); color:var(--primary-h); display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; vertical-align:middle; margin-right:8px; }
-.btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:99px; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.15s; border:2px solid transparent; }
-.btn-primary { background:var(--primary); color:#fff; }
-.btn-primary:hover { background:var(--primary-h); transform:translateY(-1px); box-shadow:0 4px 12px rgba(90,154,112,0.35); }
-.btn-accent { background:var(--accent); color:#fff; }
-.btn-accent:hover { background:#C07840; transform:translateY(-1px); }
-.btn-purple { background:var(--purple); color:#fff; }
-.btn-purple:hover { background:#5A4ACD; transform:translateY(-1px); }
-.btn-ghost { border:2px solid var(--border); background:var(--surface); color:var(--text-sub); }
-.btn-ghost:hover { border-color:var(--primary); color:var(--primary); }
-.btn-danger { background:var(--alert-lt); color:var(--alert); border:2px solid var(--alert); }
-.btn-danger:hover { background:var(--alert); color:#fff; }
-.btn:disabled { opacity:0.45; cursor:not-allowed; transform:none; box-shadow:none; }
-.btn-sm { padding:5px 12px; font-size:11px; }
-.form-group { margin-bottom:16px; }
-.form-label { font-size:12px; font-weight:800; color:var(--text); margin-bottom:6px; display:block; }
-.form-input { width:100%; padding:10px 14px; border-radius:var(--radius); border:2px solid var(--border); background:var(--surface); font-size:14px; color:var(--text); font-family:"Noto Sans TC",sans-serif; transition:border-color 0.15s; }
-.form-input:focus { border-color:var(--primary); }
-.form-select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23718096' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:36px; }
-.feedback-card { border:2px solid var(--border); border-radius:var(--radius-lg); padding:18px 20px; margin-bottom:14px; background:var(--surface); }
-.feedback-card.unread { border-color:var(--accent); background:#FFFAF6; }
-.feedback-card-header { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
-.feedback-card-meta { flex:1; }
-.feedback-card-name { font-size:14px; font-weight:800; color:var(--text); }
-.feedback-card-time { font-size:11px; color:var(--text-sub); }
-.feedback-card-body { font-size:14px; color:var(--text); line-height:1.7; margin-bottom:12px; white-space:pre-wrap; }
-.feedback-card-img { max-width:100%; max-height:300px; border-radius:var(--radius); object-fit:contain; border:2px solid var(--border); margin-top:10px; }
-.unread-dot { width:8px; height:8px; border-radius:50%; background:var(--accent); flex-shrink:0; }
-.badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:99px; font-size:11px; font-weight:800; }
-.badge-green { background:var(--primary-lt); color:var(--primary-h); }
-.badge-orange { background:#FFF4EC; color:var(--accent); }
-.badge-purple { background:var(--purple-lt); color:var(--purple); }
-.badge-gray { background:var(--surface-2); color:var(--text-sub); }
-.badge-gold { background:var(--gold-lt); color:var(--gold); }
-.modal-overlay { position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.4); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:20px; }
-.modal { background:var(--surface); border-radius:var(--radius-lg); border:2px solid var(--border); width:100%; max-width:520px; max-height:90vh; overflow-y:auto; box-shadow:0 24px 64px rgba(0,0,0,0.15); animation:modalIn 0.3s cubic-bezier(0.175,0.885,0.32,1.275); }
-@keyframes modalIn { from{opacity:0;transform:scale(0.92) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
-.modal-header { padding:20px 24px 16px; border-bottom:2px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
-.modal-title { font-size:17px; font-weight:900; color:var(--text); }
-.modal-body { padding:24px; }
-.modal-close { width:30px; height:30px; border-radius:50%; background:var(--surface-2); border:none; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; color:var(--text-sub); transition:all 0.15s; }
-.modal-close:hover { background:var(--alert-lt); color:var(--alert); }
-.toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%); background:rgba(30,30,30,0.92); color:#fff; padding:12px 24px; border-radius:99px; font-size:14px; font-weight:700; box-shadow:0 8px 24px rgba(0,0,0,0.25); z-index:9999; animation:toastIn 0.3s cubic-bezier(0.175,0.885,0.32,1.275); white-space:nowrap; }
-@keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(16px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
-.search-wrap { position:relative; margin-bottom:16px; }
-.search-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-sub); font-size:13px; }
-.search-input { width:100%; padding:9px 14px 9px 36px; border:2px solid var(--border); border-radius:99px; font-size:13px; font-family:"Noto Sans TC",sans-serif; background:var(--surface); color:var(--text); transition:border-color 0.15s; }
-.search-input:focus { outline:none; border-color:var(--primary); }
-.tab-bar { display:flex; gap:6px; margin-bottom:20px; flex-wrap:wrap; }
-.tab-btn { padding:8px 18px; border-radius:99px; border:2px solid var(--border); background:var(--surface); font-size:13px; font-weight:700; color:var(--text-sub); cursor:pointer; transition:all 0.15s; }
-.tab-btn.active { background:var(--primary); color:#fff; border-color:var(--primary-h); }
-.grant-type-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:10px; margin-bottom:16px; }
-.grant-type-btn { padding:12px 8px; border-radius:var(--radius); border:2px solid var(--border); background:var(--surface); text-align:center; cursor:pointer; transition:all 0.15s; }
-.grant-type-btn:hover, .grant-type-btn.active { border-color:var(--primary); background:var(--primary-lt); }
-.grant-type-icon { font-size:24px; display:block; margin-bottom:6px; }
-.grant-type-label { font-size:12px; font-weight:800; color:var(--text); }
-.grant-target-toggle { display:flex; gap:8px; margin-bottom:16px; }
-.target-btn { flex:1; padding:10px; border-radius:var(--radius); border:2px solid var(--border); background:var(--surface); font-size:13px; font-weight:700; color:var(--text-sub); cursor:pointer; transition:all 0.15s; }
-.target-btn.active { border-color:var(--primary); background:var(--primary-lt); color:var(--primary-h); }
-.empty-state { text-align:center; padding:48px 20px; color:var(--text-sub); }
-.empty-state-icon { font-size:48px; margin-bottom:12px; }
-.empty-state-text { font-size:14px; font-weight:600; }
-.loading { text-align:center; padding:40px; color:var(--text-sub); font-size:14px; font-weight:600; }
-@media (max-width:768px) { .admin-sidebar{width:200px} .admin-main{margin-left:200px;padding:20px 16px} }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#F4F6F9;--surface:#fff;--s2:#F8F9FB;--border:#E2E8F0;--text:#1A202C;--sub:#718096;--pri:#7BAE8A;--prih:#5A9A70;--prilt:#EAF5EC;--acc:#E8A87C;--acclt:#FFF4EC;--red:#E53E3E;--redlt:#FFF5F5;--pu:#6A5ACD;--r:12px;--rlg:18px;--rp:999px}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,textarea,select{font-family:inherit}
+.wrap{display:flex;min-height:100vh}
+.sb{width:220px;flex-shrink:0;background:var(--surface);border-right:2px solid var(--border);display:flex;flex-direction:column}
+.logo{padding:22px 20px 18px;border-bottom:2px solid var(--border);background:linear-gradient(135deg,var(--prilt),#FFF8EC)}
+.lt{font-size:16px;font-weight:900;color:var(--prih);margin-top:6px}
+.ls{font-size:10px;color:var(--sub);margin-top:2px}
+.snav{padding:12px 10px;flex:1;display:flex;flex-direction:column;gap:2px}
+.nb{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r);font-size:13px;font-weight:700;color:var(--sub);transition:all .15s;text-align:left;width:100%}
+.nb:hover{background:var(--s2);color:var(--text)}
+.nb.on{background:var(--pri);color:#fff}
+.nb i{width:18px;text-align:center}
+.nbg{background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:2px 6px;border-radius:var(--rp);margin-left:auto}
+.sf{padding:12px 14px;border-top:2px solid var(--border)}
+.mn{flex:1;overflow-y:auto;padding:32px 36px;background:var(--bg)}
+.lw{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#EFF8F1,#E6F2E8)}
+.lc{background:var(--surface);border-radius:24px;border:2px solid var(--border);padding:48px 40px;text-align:center;max-width:360px;width:90%}
+.li{font-size:56px;display:block;margin-bottom:16px}
+.ltt{font-size:24px;font-weight:900;margin-bottom:4px}
+.lsb{font-size:13px;color:var(--sub);margin-bottom:28px}
+.le{font-size:13px;color:var(--red);font-weight:700;margin-top:12px}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;border-radius:var(--rp);background:#fff;border:2px solid var(--border);font-size:14px;font-weight:800;color:var(--text);cursor:pointer;transition:all .2s}
+.gbtn:hover{border-color:#4285F4;transform:translateY(-1px)}
+.ph{margin-bottom:28px}
+.pht{font-size:24px;font-weight:900;letter-spacing:-.02em}
+.phs{font-size:13px;color:var(--sub);margin-top:4px}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:28px}
+.sc{background:var(--surface);border-radius:var(--rlg);border:2px solid var(--border);padding:20px 22px}
+.si{font-size:28px;margin-bottom:8px}
+.sv{font-size:30px;font-weight:900;letter-spacing:-.03em;line-height:1}
+.sl{font-size:12px;color:var(--sub);margin-top:4px;font-weight:600}
+.card{background:var(--surface);border-radius:var(--rlg);border:2px solid var(--border);padding:24px 28px;margin-bottom:20px}
+.ct{font-size:16px;font-weight:900;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:8px}
+.fr{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.fl{font-size:13px;font-weight:800}
+.fi{padding:10px 14px;border:2px solid var(--border);border-radius:var(--r);font-size:14px;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s;width:100%}
+.fi:focus{border-color:var(--pri)}
+textarea.fi{resize:vertical;min-height:100px;line-height:1.7}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--rp);font-size:14px;font-weight:800;cursor:pointer;transition:all .15s;border:none}
+.bp{background:var(--pri);color:#fff}.bp:hover{background:var(--prih);transform:translateY(-1px)}
+.bpu{background:var(--pu);color:#fff}.bpu:hover{background:#5A4AB5;transform:translateY(-1px)}
+.bg{background:var(--s2);color:var(--sub);border:2px solid var(--border)}.bg:hover{border-color:var(--sub);color:var(--text)}
+.bd{background:var(--redlt);color:var(--red);border:2px solid var(--red)}.bd:hover{background:var(--red);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.bsm{padding:6px 14px;font-size:12px}
+.tt{display:flex;gap:8px;margin-bottom:14px}
+.tb{padding:8px 16px;border-radius:var(--rp);border:2px solid var(--border);background:var(--surface);font-size:12px;font-weight:800;color:var(--sub);cursor:pointer;transition:all .15s}
+.tb.on{background:var(--pri);color:#fff;border-color:var(--prih)}
+.ul{max-height:220px;overflow-y:auto;border:2px solid var(--border);border-radius:var(--r)}
+.ui{display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .12s}
+.ui:last-child{border-bottom:none}
+.ui:hover{background:var(--s2)}
+.ui.on{background:var(--prilt)}
+.uav{width:32px;height:32px;border-radius:50%;background:var(--prilt);border:2px solid var(--pri);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--prih);flex-shrink:0;overflow:hidden}
+.uav img{width:100%;height:100%;object-fit:cover}
+.un{font-size:13px;font-weight:700}
+.ue{font-size:11px;color:var(--sub)}
+.stags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;min-height:28px}
+.stag{display:flex;align-items:center;gap:6px;background:var(--prilt);border:1.5px solid var(--pri);border-radius:var(--rp);padding:4px 10px;font-size:12px;font-weight:700;color:var(--prih)}
+.rg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.rc{border:2px solid var(--border);border-radius:var(--r);padding:14px 10px;text-align:center;cursor:pointer;transition:all .15s}
+.rc:hover,.rc.on{border-color:var(--pri);background:var(--prilt);box-shadow:0 0 0 2px var(--pri)}
+.ri{font-size:26px;margin-bottom:6px}
+.rl{font-size:12px;font-weight:800}
+.ff{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.ffl{padding:6px 14px;border-radius:var(--rp);border:2px solid var(--border);background:var(--surface);font-size:12px;font-weight:700;color:var(--sub);cursor:pointer}
+.ffl.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.fbl{display:flex;flex-direction:column;gap:14px}
+.fbc{background:var(--s2);border-radius:var(--r);border:2px solid var(--border);padding:16px 18px}
+.fbc.unread{border-color:var(--acc);background:var(--acclt)}
+.fbh{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.fbn{font-size:13px;font-weight:800}
+.fbt{font-size:11px;color:var(--sub);margin-left:auto}
+.fbb{font-size:14px;line-height:1.8;margin-bottom:10px}
+.fbi{max-width:300px;max-height:200px;border-radius:var(--r);border:2px solid var(--border);margin-top:8px;cursor:pointer;display:block}
+.ub{background:var(--acc);color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:var(--rp)}
+.al{display:flex;flex-direction:column;gap:10px}
+.ai{background:var(--s2);border-radius:var(--r);border:2px solid var(--border);padding:14px 16px;display:flex;gap:12px}
+.att{font-size:14px;font-weight:800;margin-bottom:4px}
+.ab{font-size:13px;color:var(--sub);line-height:1.6}
+.am{font-size:11px;color:var(--sub);margin-top:6px}
+.wi{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s2);border-radius:var(--r);border:2px solid var(--border);margin-bottom:8px}
+.we{font-size:14px;font-weight:700;flex:1}
+.wb{font-size:11px;background:var(--prilt);color:var(--prih);padding:3px 10px;border-radius:var(--rp);font-weight:800}
+.mov{position:fixed;inset:0;z-index:800;background:rgba(26,32,44,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px}
+.mb{background:var(--surface);border-radius:var(--rlg);border:2px solid var(--border);width:100%;max-width:440px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.mtt{font-size:18px;font-weight:900;margin-bottom:12px}
+.mbd{font-size:14px;color:var(--sub);line-height:1.7;margin-bottom:20px;white-space:pre-wrap}
+.mbt{display:flex;gap:10px;justify-content:flex-end}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;padding:8px 12px;font-size:12px;color:var(--sub);font-weight:800;border-bottom:2px solid var(--border)}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px}
+.tw{position:fixed;top:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--text);color:#fff;padding:12px 20px;border-radius:var(--r);font-size:13px;font-weight:700}
+.toast.ok{background:var(--prih)}
+.toast.err{background:var(--red)}
+.ipov{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ipov img{max-width:90vw;max-height:90vh;border-radius:var(--r)}
+.empty{text-align:center;padding:48px 20px;color:var(--sub)}
+@media(max-width:768px){.sb{width:60px}.lt,.ls,.nl{display:none}.mn{padding:20px 16px}.rg{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
-<div id="admin-app">
-  <div v-if="loading" style="min-height:100vh;display:flex;align-items:center;justify-content:center;">
-    <div style="text-align:center;"><div style="font-size:48px;margin-bottom:12px;">🏝️</div><div style="font-size:14px;color:var(--text-sub);font-weight:700;">載入中...</div></div>
+<div id="app">
+
+  <div v-if="loading" style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+    <div style="font-size:56px">🏝️</div>
+    <div style="font-size:14px;color:var(--sub);font-weight:700">載入中...</div>
   </div>
-  <div v-else-if="!fbUser" class="login-screen">
-    <div class="login-card">
-      <span class="login-logo">🏝️</span>
-      <div class="login-title">感恩小島</div>
-      <div class="login-sub">管理後台</div>
-      <div class="login-badge">⚠️ 僅限授權人員</div>
-      <button @click="signIn" class="google-btn">
-        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.29-8.16 2.29-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+
+  <div v-else-if="!fbUser" class="lw">
+    <div class="lc">
+      <span class="li">🔐</span>
+      <div class="ltt">感恩小島後台</div>
+      <div class="lsb">僅限授權管理員登入</div>
+      <button class="gbtn" @click="signIn">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.29-8.16 2.29-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         使用 Google 帳號登入
       </button>
-      <div v-if="accessDenied" class="access-denied">⛔ 你沒有後台存取權限</div>
-      <div v-if="loginError" class="login-error">{{ loginError }}</div>
+      <div v-if="lerr" class="le">{{ lerr }}</div>
     </div>
   </div>
-  <div v-else class="admin-layout">
-    <aside class="admin-sidebar">
-      <div class="admin-logo">
-        <div class="admin-logo-title">🏝️ 感恩小島</div>
-        <div class="admin-logo-sub">Admin Dashboard</div>
-        <div class="admin-logo-badge">👑 管理員</div>
+
+  <div v-else-if="!isAdmin" class="lw">
+    <div class="lc">
+      <span class="li">⛔</span>
+      <div class="ltt">無存取權限</div>
+      <div class="lsb">{{ fbUser.email }} 不在管理員名單內</div>
+      <button class="gbtn" @click="signOut" style="margin-top:16px">登出</button>
+    </div>
+  </div>
+
+  <div v-else class="wrap">
+    <aside class="sb">
+      <div class="logo">
+        <div style="font-size:28px">🏝️</div>
+        <div class="lt">管理後台</div>
+        <div class="ls">ThankU Island Admin</div>
       </div>
-      <nav class="admin-nav">
-        <div class="admin-nav-section">總覽</div>
-        <button class="admin-nav-btn" :class="{active:page==='overview'}" @click="page='overview'"><i class="fa-solid fa-chart-pie"></i> 數據總覽</button>
-        <div class="admin-nav-section">使用者</div>
-        <button class="admin-nav-btn" :class="{active:page==='users'}" @click="page='users';loadUsers()"><i class="fa-solid fa-users"></i> 使用者管理</button>
-        <button class="admin-nav-btn" :class="{active:page==='grant'}" @click="page='grant';loadUsers()"><i class="fa-solid fa-gift"></i> 發放道具</button>
-        <div class="admin-nav-section">溝通</div>
-        <button class="admin-nav-btn" :class="{active:page==='announce'}" @click="page='announce';loadAnnouncements()"><i class="fa-solid fa-bullhorn"></i> 發送公告</button>
-        <button class="admin-nav-btn" :class="{active:page==='feedback'}" @click="page='feedback';loadFeedbacks()">
-          <i class="fa-solid fa-comment-dots"></i> 使用者反饋
-          <span v-if="unreadFeedbackCount>0" style="margin-left:auto;background:var(--accent);color:#fff;border-radius:99px;padding:1px 7px;font-size:10px;font-weight:800;">{{ unreadFeedbackCount }}</span>
+      <nav class="snav">
+        <button v-for="t in tabs" :key="t.id" class="nb" :class="{on:tab===t.id}" @click="tab=t.id">
+          <i :class="t.icon"></i>
+          <span class="nl">{{ t.label }}</span>
+          <span v-if="t.id==='feedback'&&unreadFb>0" class="nbg">{{ unreadFb }}</span>
         </button>
-        <div class="admin-nav-section">設定</div>
-        <button class="admin-nav-btn" :class="{active:page==='whitelist'}" @click="page='whitelist'"><i class="fa-solid fa-shield-halved"></i> 白名單管理</button>
       </nav>
-      <div class="admin-sidebar-bottom">
-        <div class="admin-user-row">
-          <img v-if="fbUser.photoURL" :src="fbUser.photoURL" class="admin-user-avatar">
-          <div class="admin-user-name">{{ fbUser.displayName }}</div>
-        </div>
-        <button class="btn admin-signout" style="width:100%;justify-content:center;" @click="signOut"><i class="fa-solid fa-right-from-bracket"></i> 登出</button>
+      <div class="sf">
+        <div style="font-size:11px;color:var(--sub);margin-bottom:6px;font-weight:600" class="nl">{{ fbUser.displayName }}</div>
+        <button class="btn bg bsm" @click="signOut" style="width:100%">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          <span class="nl">登出</span>
+        </button>
       </div>
     </aside>
-    <main class="admin-main">
 
-      <!-- 數據總覽 -->
-      <div v-if="page==='overview'">
-        <div class="page-header"><div class="page-title">📊 數據總覽</div><div class="page-sub">感恩小島即時數據</div></div>
-        <div class="stats-grid">
-          <div class="stat-card"><div class="stat-icon">👤</div><div class="stat-val">{{ stats.users }}</div><div class="stat-label">總使用者</div></div>
-          <div class="stat-card"><div class="stat-icon">💌</div><div class="stat-val">{{ stats.letters }}</div><div class="stat-label">感謝信總數</div></div>
-          <div class="stat-card"><div class="stat-icon">💬</div><div class="stat-val">{{ stats.feedbacks }}</div><div class="stat-label">使用者反饋</div></div>
-          <div class="stat-card"><div class="stat-icon">📢</div><div class="stat-val">{{ stats.announcements }}</div><div class="stat-label">已發公告</div></div>
+    <main class="mn">
+
+      <!-- 總覽 -->
+      <div v-if="tab==='overview'">
+        <div class="ph"><div class="pht">📊 總覽</div><div class="phs">感恩小島整體數據</div></div>
+        <div class="sg">
+          <div class="sc"><div class="si">👥</div><div class="sv">{{ stats.users }}</div><div class="sl">登入使用者</div></div>
+          <div class="sc"><div class="si">💌</div><div class="sv">{{ stats.letters }}</div><div class="sl">全站感謝信</div></div>
+          <div class="sc"><div class="si">📢</div><div class="sv">{{ stats.ann }}</div><div class="sl">官方公告</div></div>
+          <div class="sc" style="border-color:var(--acc)"><div class="si">💬</div><div class="sv" style="color:var(--acc)">{{ unreadFb }}</div><div class="sl">未讀反饋</div></div>
         </div>
         <div class="card">
-          <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> 最近感謝信</div>
-          <div v-if="recentLetters.length===0" class="loading">載入中...</div>
-          <table v-else class="admin-table">
-            <thead><tr><th>寄件人</th><th>收件人</th><th>內容</th><th>時間</th></tr></thead>
+          <div class="ct"><i class="fa-solid fa-users"></i> 使用者清單</div>
+          <div v-if="!profiles.length" class="empty"><div style="font-size:48px;margin-bottom:12px">👥</div><div style="font-size:14px;font-weight:600">暫無使用者</div></div>
+          <table v-else class="tbl">
+            <thead><tr><th>使用者</th><th>信箱</th><th style="text-align:center">能量</th></tr></thead>
             <tbody>
-              <tr v-for="l in recentLetters" :key="l.id">
-                <td>{{ l.anon ? '神秘人 🎭' : (l.fromName||l.from) }}</td>
-                <td>{{ l.toName||l.to }}</td>
-                <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ l.content }}</td>
-                <td style="font-size:12px;color:var(--text-sub);">{{ fmtDate(l.timestamp) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- 使用者管理 -->
-      <div v-if="page==='users'">
-        <div class="page-header"><div class="page-title">👤 使用者管理</div><div class="page-sub">共 {{ allProfiles.length }} 位島民</div></div>
-        <div class="search-wrap"><i class="fa-solid fa-magnifying-glass search-icon"></i><input v-model="userSearch" class="search-input" placeholder="搜尋名稱或信箱..."></div>
-        <div class="card" style="padding:0;overflow:hidden;">
-          <div v-if="allProfiles.length===0" class="loading">載入中...</div>
-          <table v-else class="admin-table">
-            <thead><tr><th>使用者</th><th>信箱</th><th>能量</th><th>操作</th></tr></thead>
-            <tbody>
-              <tr v-for="u in filteredProfiles" :key="u.id">
-                <td>
-                  <img v-if="u.avatarUrl" :src="u.avatarUrl" class="user-row-avatar">
-                  <span v-else class="user-initial-badge">{{ (u.name||'?')[0] }}</span>
-                  {{ u.name }}
-                </td>
-                <td style="color:var(--text-sub);font-size:12px;">{{ u.email||'—' }}</td>
-                <td><span class="badge badge-orange">⚡ {{ u.energy||0 }}</span></td>
-                <td><button class="btn btn-ghost btn-sm" @click="openGrantForUser(u)"><i class="fa-solid fa-gift"></i> 發放</button></td>
+              <tr v-for="p in profiles" :key="p.id">
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="uav"><img v-if="p.avatarUrl" :src="p.avatarUrl"><span v-else>{{ (p.name||'?')[0] }}</span></div><span style="font-weight:700">{{ p.name }}</span></div></td>
+                <td style="color:var(--sub);font-size:12px">{{ p.email }}</td>
+                <td style="text-align:center;font-weight:700">⚡ {{ p.energy||0 }}</td>
               </tr>
             </tbody>
           </table>
@@ -227,385 +202,192 @@ input, textarea, select { font-family: inherit; outline: none; }
       </div>
 
       <!-- 發放道具 -->
-      <div v-if="page==='grant'">
-        <div class="page-header"><div class="page-title">🎁 發放道具</div><div class="page-sub">發放資源給使用者</div></div>
+      <div v-if="tab==='reward'">
+        <div class="ph"><div class="pht">🎁 發放道具</div><div class="phs">向全站或指定使用者發送資源</div></div>
         <div class="card">
-          <div class="card-title"><i class="fa-solid fa-bullseye"></i> 發放對象</div>
-          <div class="grant-target-toggle">
-            <button class="target-btn" :class="{active:grantTarget==='all'}" @click="grantTarget='all';grantUserId=''">🌍 全站所有人</button>
-            <button class="target-btn" :class="{active:grantTarget==='single'}" @click="grantTarget='single'">👤 指定使用者</button>
+          <div class="ct"><i class="fa-solid fa-bullseye"></i> 選擇對象</div>
+          <div class="tt">
+            <button class="tb" :class="{on:rTarget==='all'}" @click="rTarget='all';selUsers=[]">🌍 全站所有人</button>
+            <button class="tb" :class="{on:rTarget==='select'}" @click="rTarget='select'">👤 指定使用者</button>
           </div>
-          <div v-if="grantTarget==='single'" class="form-group">
-            <label class="form-label">選擇使用者</label>
-            <select v-model="grantUserId" class="form-input form-select">
-              <option value="">— 請選擇 —</option>
-              <option v-for="u in allProfiles" :key="u.id" :value="u.id">{{ u.name }} ({{ u.email }})</option>
-            </select>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title"><i class="fa-solid fa-box-open"></i> 發放內容</div>
-          <div class="grant-type-grid">
-            <div v-for="t in grantTypes" :key="t.id" class="grant-type-btn" :class="{active:grantType===t.id}" @click="grantType=t.id">
-              <span class="grant-type-icon">{{ t.icon }}</span><span class="grant-type-label">{{ t.label }}</span>
+          <div v-if="rTarget==='select'">
+            <input v-model="uQ" class="fi" placeholder="🔍 搜尋名稱或信箱..." style="margin-bottom:10px">
+            <div class="ul">
+              <div v-for="p in filtP" :key="p.id" class="ui" :class="{on:selUsers.includes(p.id)}" @click="toggleU(p.id)">
+                <div class="uav"><img v-if="p.avatarUrl" :src="p.avatarUrl"><span v-else>{{ (p.name||'?')[0] }}</span></div>
+                <div><div class="un">{{ p.name }}</div><div class="ue">{{ p.email }}</div></div>
+                <i v-if="selUsers.includes(p.id)" class="fa-solid fa-check" style="margin-left:auto;color:var(--pri)"></i>
+              </div>
+            </div>
+            <div class="stags">
+              <div v-for="uid in selUsers" :key="uid" class="stag">{{ gname(uid) }}<button @click="toggleU(uid)" style="color:var(--prih);padding:0;line-height:1">✕</button></div>
             </div>
           </div>
-          <div v-if="grantType && grantType!=='pet' && grantType!=='decor'" class="form-group">
-            <label class="form-label">數量</label>
-            <input v-model.number="grantAmount" type="number" min="1" max="9999" class="form-input" style="width:160px;">
-          </div>
-          <div v-if="grantType==='pet'||grantType==='decor'" class="form-group">
-            <label class="form-label">選擇{{ grantType==='pet'?'動物夥伴':'裝飾品' }}</label>
-            <select v-model="grantItemId" class="form-input form-select">
-              <option value="">— 請選擇 —</option>
-              <option v-for="item in (grantType==='pet'?petPool:decorPool)" :key="item.name" :value="item.name">{{ item.emoji }} {{ item.name }} ({{ item.rarity }})</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">備註 <span style="color:var(--text-sub);font-weight:400;">（選填）</span></label>
-            <input v-model="grantNote" class="form-input" placeholder="例如：感謝參與活動！">
-          </div>
-          <button class="btn btn-primary" :disabled="!canGrant" @click="showGrantConfirm=true"><i class="fa-solid fa-paper-plane"></i> 確認發放</button>
         </div>
         <div class="card">
-          <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> 發放紀錄</div>
-          <div v-if="grantLogs.length===0" class="empty-state"><div class="empty-state-icon">📦</div><div class="empty-state-text">尚無發放紀錄</div></div>
-          <table v-else class="admin-table">
-            <thead><tr><th>對象</th><th>類型</th><th>內容</th><th>備註</th><th>時間</th></tr></thead>
-            <tbody>
-              <tr v-for="log in grantLogs" :key="log.id">
-                <td>{{ log.targetName }}</td>
-                <td><span class="badge badge-green">{{ log.typeName }}</span></td>
-                <td>{{ log.amount||'' }}{{ log.itemName||'' }}</td>
-                <td style="color:var(--text-sub);font-size:12px;">{{ log.note||'—' }}</td>
-                <td style="font-size:12px;color:var(--text-sub);">{{ fmtDate(log.timestamp) }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="ct"><i class="fa-solid fa-gift"></i> 道具類型</div>
+          <div class="rg">
+            <div v-for="rt in rtypes" :key="rt.id" class="rc" :class="{on:rType===rt.id}" @click="rType=rt.id">
+              <div class="ri">{{ rt.icon }}</div><div class="rl">{{ rt.label }}</div>
+            </div>
+          </div>
+          <div class="fr"><label class="fl">數量</label><input v-model.number="rAmt" type="number" min="1" max="9999" class="fi" style="max-width:140px"></div>
+          <div class="fr"><label class="fl">備註 <span style="color:var(--sub);font-weight:400">（收件者看得到，選填）</span></label><input v-model="rNote" class="fi" placeholder="例如：感謝你參與本月活動！🎉"></div>
+          <button class="btn bp" @click="openRC" :disabled="(rTarget==='select'&&selUsers.length===0)||rAmt<1">
+            <i class="fa-solid fa-paper-plane"></i>
+            {{ rTarget==='all'?'發放給全站':'發放給 '+selUsers.length+' 位使用者' }}
+          </button>
         </div>
       </div>
 
-      <!-- 發送公告 -->
-      <div v-if="page==='announce'">
-        <div class="page-header"><div class="page-title">📢 發送公告</div><div class="page-sub">發送訊息到所有使用者的官方公告信箱</div></div>
+      <!-- 全站公告 -->
+      <div v-if="tab==='announce'">
+        <div class="ph"><div class="pht">📢 全站公告</div><div class="phs">公告將出現在所有使用者信箱的官方公告分頁</div></div>
         <div class="card">
-          <div class="form-group"><label class="form-label">公告標題</label><input v-model="annTitle" class="form-input" placeholder="例如：系統維護通知"></div>
-          <div class="form-group"><label class="form-label">公告內容</label><textarea v-model="annContent" rows="8" class="form-input" placeholder="輸入公告內容..."></textarea></div>
-          <div class="form-group">
-            <label class="form-label">公告類型</label>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;">
-              <label v-for="t in annTypes" :key="t.id" :style="'display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 14px;border:2px solid var(--border);border-radius:99px;font-size:13px;font-weight:700;transition:all 0.15s;'+(annType===t.id?'border-color:var(--primary);background:var(--primary-lt);color:var(--primary-h)':'')">
-                <input type="radio" v-model="annType" :value="t.id" style="display:none;">{{ t.icon }} {{ t.label }}
-              </label>
-            </div>
-          </div>
-          <button class="btn btn-primary" :disabled="!annTitle.trim()||!annContent.trim()" @click="showAnnConfirm=true"><i class="fa-solid fa-bullhorn"></i> 發送公告</button>
+          <div class="ct"><i class="fa-solid fa-bullhorn"></i> 撰寫公告</div>
+          <div class="fr"><label class="fl">公告標題</label><input v-model="aTitle" class="fi" placeholder="例如：🎉 四月活動開始了！"></div>
+          <div class="fr"><label class="fl">公告內容</label><textarea v-model="aContent" class="fi" rows="6" placeholder="輸入公告內容..."></textarea></div>
+          <button class="btn bpu" @click="openAC" :disabled="!aTitle.trim()||!aContent.trim()">
+            <i class="fa-solid fa-paper-plane"></i> 發送全站公告
+          </button>
         </div>
         <div class="card">
-          <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> 歷史公告</div>
-          <div v-if="announcements.length===0" class="empty-state"><div class="empty-state-icon">📢</div><div class="empty-state-text">尚無公告</div></div>
-          <div v-for="ann in announcements" :key="ann.id" style="padding:14px 0;border-bottom:1px solid var(--border);">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-              <span class="badge" :class="ann.type==='urgent'?'badge-orange':ann.type==='event'?'badge-purple':'badge-green'">{{ annTypes.find(t=>t.id===ann.type)?.icon||'📢' }} {{ annTypes.find(t=>t.id===ann.type)?.label||'一般' }}</span>
-              <span style="font-size:14px;font-weight:800;">{{ ann.title }}</span>
-              <span style="margin-left:auto;font-size:11px;color:var(--text-sub);">{{ fmtDate(ann.timestamp) }}</span>
+          <div class="ct"><i class="fa-solid fa-clock-rotate-left"></i> 公告歷史</div>
+          <div v-if="!adminAnns.length" class="empty"><div style="font-size:48px;margin-bottom:12px">📢</div><div style="font-size:14px;font-weight:600">尚未發送過公告</div></div>
+          <div class="al">
+            <div v-for="a in adminAnns" :key="a.id" class="ai">
+              <div style="font-size:24px;flex-shrink:0">📢</div>
+              <div><div class="att">{{ a.title }}</div><div class="ab">{{ a.content }}</div><div class="am">{{ fmtDate(a.timestamp) }}</div></div>
             </div>
-            <div style="font-size:13px;color:var(--text-sub);line-height:1.6;">{{ ann.content }}</div>
           </div>
         </div>
       </div>
 
       <!-- 使用者反饋 -->
-      <div v-if="page==='feedback'">
-        <div class="page-header"><div class="page-title">💬 使用者反饋</div><div class="page-sub">共 {{ feedbacks.length }} 則，{{ unreadFeedbackCount }} 則未讀</div></div>
-        <div class="tab-bar">
-          <button class="tab-btn" :class="{active:feedbackFilter==='all'}" @click="feedbackFilter='all'">全部</button>
-          <button class="tab-btn" :class="{active:feedbackFilter==='unread'}" @click="feedbackFilter='unread'">未讀 <span v-if="unreadFeedbackCount>0" style="margin-left:4px;background:var(--accent);color:#fff;border-radius:99px;padding:1px 7px;font-size:10px;">{{ unreadFeedbackCount }}</span></button>
-          <button class="tab-btn" :class="{active:feedbackFilter==='read'}" @click="feedbackFilter='read'">已讀</button>
+      <div v-if="tab==='feedback'">
+        <div class="ph"><div class="pht">💬 使用者反饋</div><div class="phs">來自使用者的意見與建議</div></div>
+        <div class="ff">
+          <button v-for="f in [{id:'all',l:'全部'},{id:'unread',l:'未讀'},{id:'read',l:'已讀'}]" :key="f.id"
+            class="ffl" :class="{on:fbF===f.id}" @click="fbF=f.id">{{ f.l }}</button>
         </div>
-        <div v-if="filteredFeedbacks.length===0" class="empty-state"><div class="empty-state-icon">🎉</div><div class="empty-state-text">{{ feedbackFilter==='unread'?'沒有未讀反饋':'暫無反饋' }}</div></div>
-        <div v-for="fb in filteredFeedbacks" :key="fb.id" class="feedback-card" :class="{unread:!fb.read}">
-          <div class="feedback-card-header">
-            <div class="unread-dot" v-if="!fb.read"></div>
-            <img v-if="fb.avatarUrl" :src="fb.avatarUrl" class="user-row-avatar" style="margin-right:0;">
-            <span v-else class="user-initial-badge" style="margin-right:0;">{{ (fb.name||'?')[0] }}</span>
-            <div class="feedback-card-meta">
-              <div class="feedback-card-name">{{ fb.name }}</div>
-              <div class="feedback-card-time">{{ fb.email }} · {{ fmtDate(fb.timestamp) }}</div>
+        <div v-if="!filtFb.length" class="empty"><div style="font-size:48px;margin-bottom:12px">💬</div><div style="font-size:14px;font-weight:600">{{ fbF==='unread'?'沒有未讀反饋':'還沒有收到反饋' }}</div></div>
+        <div class="fbl">
+          <div v-for="fb in filtFb" :key="fb.id" class="fbc" :class="{unread:!fb.read}">
+            <div class="fbh">
+              <div class="uav"><span>{{ (fb.fromName||'?')[0] }}</span></div>
+              <div><div class="fbn">{{ fb.fromName||'匿名' }}</div><div style="font-size:11px;color:var(--sub)">{{ fb.fromEmail||'' }}</div></div>
+              <span v-if="!fb.read" class="ub">未讀</span>
+              <span class="fbt">{{ fmtDate(fb.timestamp) }}</span>
             </div>
-            <button v-if="!fb.read" class="btn btn-ghost btn-sm" @click="markFeedbackRead(fb)">標為已讀</button>
+            <div class="fbb">{{ fb.content }}</div>
+            <img v-if="fb.imgUrl" :src="fb.imgUrl" class="fbi" @click="prevImg=fb.imgUrl">
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <button v-if="!fb.read" class="btn bg bsm" @click="markRead(fb)"><i class="fa-solid fa-check"></i> 標為已讀</button>
+              <button class="btn bd bsm" @click="delFb(fb)"><i class="fa-solid fa-trash"></i> 刪除</button>
+            </div>
           </div>
-          <div class="feedback-card-body">{{ fb.content }}</div>
-          <img v-if="fb.imgUrl" :src="fb.imgUrl" class="feedback-card-img">
         </div>
       </div>
 
-      <!-- 白名單管理 -->
-      <div v-if="page==='whitelist'">
-        <div class="page-header"><div class="page-title">🛡️ 白名單管理</div><div class="page-sub">只有白名單內的信箱才能存取管理後台</div></div>
+      <!-- 白名單 -->
+      <div v-if="tab==='whitelist'">
+        <div class="ph"><div class="pht">🔐 白名單管理</div><div class="phs">管理有後台權限的信箱</div></div>
         <div class="card">
-          <div class="card-title"><i class="fa-solid fa-list-check"></i> 目前白名單</div>
-          <div v-for="(email,i) in whitelist" :key="email" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
-            <i class="fa-solid fa-shield-check" style="color:var(--primary);"></i>
-            <span style="font-size:14px;font-weight:700;flex:1;">{{ email }}</span>
-            <span v-if="email===fbUser.email" class="badge badge-gold">👑 你</span>
-            <button v-if="email!=='agootw@gmail.com'" class="btn btn-danger btn-sm" @click="removeWhitelist(i)">移除</button>
+          <div class="ct"><i class="fa-solid fa-shield"></i> 目前白名單</div>
+          <div v-for="email in wl" :key="email" class="wi">
+            <i class="fa-solid fa-envelope" style="color:var(--pri)"></i>
+            <span class="we">{{ email }}</span>
+            <span v-if="email===fbUser.email" class="wb">你</span>
+            <button v-if="email!==fbUser.email" class="btn bd bsm" @click="rmWL(email)"><i class="fa-solid fa-trash"></i></button>
           </div>
         </div>
         <div class="card">
-          <div class="card-title"><i class="fa-solid fa-plus"></i> 新增白名單</div>
-          <div class="form-group">
-            <label class="form-label">信箱地址</label>
-            <div style="display:flex;gap:10px;">
-              <input v-model="newWhitelistEmail" class="form-input" placeholder="example@gmail.com" style="flex:1;" @keyup.enter="addWhitelist">
-              <button class="btn btn-primary" :disabled="!newWhitelistEmail.includes('@')" @click="addWhitelist"><i class="fa-solid fa-plus"></i> 新增</button>
-            </div>
-          </div>
-          <div style="font-size:12px;color:var(--text-sub);font-weight:500;background:var(--surface-2);border-radius:var(--radius);padding:12px 14px;border:1.5px solid var(--border);">⚠️ 新增後對方需重新登入才會生效。</div>
+          <div class="ct"><i class="fa-solid fa-plus"></i> 新增管理員</div>
+          <div class="fr"><label class="fl">信箱地址</label><input v-model="newWL" class="fi" placeholder="example@gmail.com" type="email"></div>
+          <button class="btn bp" @click="addWL" :disabled="!newWL.includes('@')"><i class="fa-solid fa-plus"></i> 新增</button>
         </div>
       </div>
 
     </main>
   </div>
 
-  <!-- 發放確認彈窗 -->
-  <div v-if="showGrantConfirm" class="modal-overlay" @click.self="showGrantConfirm=false">
-    <div class="modal">
-      <div class="modal-header"><span class="modal-title">🎁 確認發放</span><button class="modal-close" @click="showGrantConfirm=false">✕</button></div>
-      <div class="modal-body">
-        <div style="background:var(--surface-2);border-radius:var(--radius);padding:16px;margin-bottom:16px;border:2px solid var(--border);">
-          <div style="font-size:14px;font-weight:700;margin-bottom:4px;">對象：{{ grantTarget==='all'?'🌍 全站所有人':(allProfiles.find(u=>u.id===grantUserId)?.name||'—') }}</div>
-          <div style="font-size:14px;font-weight:700;margin-bottom:4px;">內容：{{ grantTypes.find(t=>t.id===grantType)?.icon }} {{ grantTypes.find(t=>t.id===grantType)?.label }} {{ grantType!=='pet'&&grantType!=='decor'?'× '+grantAmount:'' }} {{ grantItemId?'— '+grantItemId:'' }}</div>
-          <div v-if="grantNote" style="font-size:13px;color:var(--text-sub);">備註：{{ grantNote }}</div>
-        </div>
-        <div style="display:flex;gap:10px;">
-          <button class="btn btn-ghost" style="flex:1;" @click="showGrantConfirm=false">取消</button>
-          <button class="btn btn-primary" style="flex:2;" @click="executeGrant"><i class="fa-solid fa-paper-plane"></i> 確認發放</button>
-        </div>
+  <!-- 發放確認 -->
+  <div v-if="rShow" class="mov" @click.self="rShow=false">
+    <div class="mb">
+      <div class="mtt">🎁 確認發放？</div>
+      <div class="mbd">對象：{{ rTarget==='all'?'全站 '+profiles.length+' 位使用者':selUsers.map(gname).join('、') }}
+道具：{{ rtypes.find(r=>r.id===rType)?.icon }} {{ rtypes.find(r=>r.id===rType)?.label }} ×{{ rAmt }}{{ rNote?'\n備註：'+rNote:'' }}</div>
+      <div class="mbt">
+        <button class="btn bg" @click="rShow=false">取消</button>
+        <button class="btn bp" @click="doReward" :disabled="sending">{{ sending?'發送中...':'確認發放' }}</button>
       </div>
     </div>
   </div>
 
-  <!-- 公告確認彈窗 -->
-  <div v-if="showAnnConfirm" class="modal-overlay" @click.self="showAnnConfirm=false">
-    <div class="modal">
-      <div class="modal-header"><span class="modal-title">📢 確認發送公告</span><button class="modal-close" @click="showAnnConfirm=false">✕</button></div>
-      <div class="modal-body">
-        <div style="background:var(--surface-2);border-radius:var(--radius);padding:16px;margin-bottom:16px;border:2px solid var(--border);">
-          <div style="font-size:15px;font-weight:800;margin-bottom:6px;">{{ annTitle }}</div>
-          <div style="font-size:13px;color:var(--text-sub);line-height:1.7;">{{ annContent }}</div>
-        </div>
-        <div style="font-size:12px;color:var(--accent);background:#FFF4EC;padding:10px 14px;border-radius:var(--radius);margin-bottom:16px;font-weight:600;">⚠️ 此公告將發送給所有使用者，請確認內容正確</div>
-        <div style="display:flex;gap:10px;">
-          <button class="btn btn-ghost" style="flex:1;" @click="showAnnConfirm=false">取消</button>
-          <button class="btn btn-primary" style="flex:2;" @click="sendAnnouncement"><i class="fa-solid fa-bullhorn"></i> 發送</button>
-        </div>
+  <!-- 公告確認 -->
+  <div v-if="aShow" class="mov" @click.self="aShow=false">
+    <div class="mb">
+      <div class="mtt">📢 確認發送全站公告？</div>
+      <div class="mbd">{{ aTitle }}
+
+{{ aContent }}</div>
+      <div class="mbt">
+        <button class="btn bg" @click="aShow=false">取消</button>
+        <button class="btn bpu" @click="doAnn" :disabled="sending">{{ sending?'發送中...':'確認發送' }}</button>
       </div>
     </div>
   </div>
 
-  <div v-if="toast" class="toast">{{ toast }}</div>
+  <!-- 圖片預覽 -->
+  <div v-if="prevImg" class="ipov" @click="prevImg=null"><img :src="prevImg"></div>
+
+  <!-- Toast -->
+  <div class="tw">
+    <div v-for="t in toasts" :key="t.id" class="toast" :class="t.type">{{ t.msg }}</div>
+  </div>
+
 </div>
-
 <script>
-const { createApp, ref, computed, onMounted } = Vue;
-const WHITELIST_KEY = 'thanku_admin_whitelist';
-const DEFAULT_WHITELIST = ['agootw@gmail.com'];
-
-createApp({
-  setup() {
-    const loading = ref(true), fbUser = ref(null), accessDenied = ref(false);
-    const loginError = ref(''), page = ref('overview'), toast = ref('');
-    const whitelist = ref([...DEFAULT_WHITELIST]);
-
-    const loadWhitelist = () => {
-      try {
-        const raw = localStorage.getItem(WHITELIST_KEY);
-        if (raw) whitelist.value = [...new Set([...DEFAULT_WHITELIST, ...JSON.parse(raw)])];
-      } catch(_) {}
-    };
-    const saveWhitelist = () => localStorage.setItem(WHITELIST_KEY, JSON.stringify(whitelist.value));
-    const newWhitelistEmail = ref('');
-    const addWhitelist = () => {
-      const e = newWhitelistEmail.value.trim().toLowerCase();
-      if (!e || !e.includes('@')) return;
-      if (whitelist.value.includes(e)) { showToast('此信箱已在白名單'); return; }
-      whitelist.value.push(e); saveWhitelist(); newWhitelistEmail.value = '';
-      showToast('✅ 已新增：' + e);
-    };
-    const removeWhitelist = (i) => {
-      if (whitelist.value[i] === 'agootw@gmail.com') return;
-      const r = whitelist.value.splice(i, 1)[0]; saveWhitelist(); showToast('已移除：' + r);
-    };
-    const isAdmin = (email) => whitelist.value.includes((email||'').toLowerCase());
-
-    const signIn = async () => {
-      loginError.value = ''; accessDenied.value = false;
-      try {
-        const result = await auth.signInWithPopup(googleProvider);
-        if (!isAdmin(result.user.email)) { accessDenied.value = true; await auth.signOut(); }
-      } catch(e) { loginError.value = '登入失敗，請再試一次。'; }
-    };
-    const signOut = () => auth.signOut();
-
-    const allProfiles = ref([]), feedbacks = ref([]), announcements = ref([]);
-    const recentLetters = ref([]), grantLogs = ref([]);
-    const stats = ref({ users: 0, letters: 0, feedbacks: 0, announcements: 0 });
-
-    const loadStats = async () => {
-      try {
-        const [ps, ls, fs, as] = await Promise.allSettled([
-          db.collection('profiles').get(),
-          db.collection('letters').orderBy('timestamp','desc').limit(10).get(),
-          db.collection('feedbacks').get(),
-          db.collection('announcements').get(),
-        ]);
-        if (ps.status==='fulfilled') { stats.value.users = ps.value.size; allProfiles.value = ps.value.docs.map(d=>d.data()).sort((a,b)=>(a.name||'').localeCompare(b.name||'','zh-Hant')); }
-        if (ls.status==='fulfilled') { stats.value.letters = ls.value.size; recentLetters.value = ls.value.docs.map(d=>({id:d.id,...d.data()})); }
-        if (fs.status==='fulfilled') stats.value.feedbacks = fs.value.size;
-        if (as.status==='fulfilled') stats.value.announcements = as.value.docs.filter(d=>d.data().type!=='welcome').length;
-      } catch(e) {}
-    };
-    const loadUsers = async () => {
-      if (allProfiles.value.length > 0) return;
-      try { const s = await db.collection('profiles').get(); allProfiles.value = s.docs.map(d=>d.data()).sort((a,b)=>(a.name||'').localeCompare(b.name||'','zh-Hant')); } catch(e) {}
-    };
-    const loadFeedbacks = async () => {
-      try { const s = await db.collection('feedbacks').orderBy('timestamp','desc').get(); feedbacks.value = s.docs.map(d=>({id:d.id,...d.data()})); } catch(e) {}
-    };
-    const loadAnnouncements = async () => {
-      try { const s = await db.collection('announcements').orderBy('timestamp','desc').limit(50).get(); announcements.value = s.docs.map(d=>({id:d.id,...d.data()})).filter(a=>a.type!=='welcome'); } catch(e) {}
-    };
-    const loadGrantLogs = async () => {
-      try { const s = await db.collection('grant_logs').orderBy('timestamp','desc').limit(50).get(); grantLogs.value = s.docs.map(d=>({id:d.id,...d.data()})); } catch(e) {}
-    };
-
-    const userSearch = ref('');
-    const filteredProfiles = computed(() => {
-      const q = userSearch.value.trim().toLowerCase();
-      return q ? allProfiles.value.filter(u=>(u.name||'').toLowerCase().includes(q)||(u.email||'').toLowerCase().includes(q)) : allProfiles.value;
-    });
-
-    const feedbackFilter = ref('all');
-    const filteredFeedbacks = computed(() => {
-      if (feedbackFilter.value==='unread') return feedbacks.value.filter(f=>!f.read);
-      if (feedbackFilter.value==='read') return feedbacks.value.filter(f=>f.read);
-      return feedbacks.value;
-    });
-    const unreadFeedbackCount = computed(() => feedbacks.value.filter(f=>!f.read).length);
-    const markFeedbackRead = async (fb) => {
-      try { await db.collection('feedbacks').doc(fb.id).update({ read: true }); fb.read = true; showToast('已標為已讀'); } catch(e) {}
-    };
-
-    const grantTarget = ref('all'), grantUserId = ref(''), grantType = ref('');
-    const grantAmount = ref(1), grantNote = ref(''), grantItemId = ref('');
-    const showGrantConfirm = ref(false);
-    const grantTypes = [
-      {id:'cards',icon:'💌',label:'感謝卡'},{id:'tiles',icon:'🏝️',label:'島嶼板塊'},
-      {id:'energy',icon:'⚡',label:'能量'},{id:'shells',icon:'🪙',label:'貝殼幣'},
-      {id:'pet',icon:'🐾',label:'動物夥伴'},{id:'decor',icon:'🏕️',label:'裝飾品'},
-    ];
-    const petPool = [
-      {name:'倉鼠',emoji:'🐹',rarity:'普通'},{name:'白兔',emoji:'🐰',rarity:'普通'},
-      {name:'柴犬',emoji:'🐕',rarity:'普通'},{name:'小雞',emoji:'🐥',rarity:'普通'},
-      {name:'英短貓',emoji:'🐱',rarity:'稀有'},{name:'企鵝',emoji:'🐧',rarity:'稀有'},
-      {name:'狐狸',emoji:'🦊',rarity:'稀有'},{name:'獨角獸',emoji:'🦄',rarity:'傳說'},
-      {name:'水手',emoji:'⛵',rarity:'傳說'},{name:'小馬',emoji:'🐴',rarity:'傳說'},
-    ];
-    const decorPool = [
-      {name:'橡木樹',emoji:'🌳',rarity:'普通'},{name:'雪松',emoji:'🌲',rarity:'普通'},
-      {name:'櫻花樹',emoji:'🌸',rarity:'普通'},{name:'向日葵',emoji:'🌻',rarity:'普通'},
-      {name:'蘑菇',emoji:'🍄',rarity:'普通'},{name:'篝火堆',emoji:'🔥',rarity:'稀有'},
-      {name:'許願池',emoji:'⛲',rarity:'稀有'},{name:'露營帳篷',emoji:'⛺',rarity:'稀有'},
-    ];
-    const canGrant = computed(() => {
-      if (!grantType.value) return false;
-      if (grantTarget.value==='single' && !grantUserId.value) return false;
-      if ((grantType.value==='pet'||grantType.value==='decor') && !grantItemId.value) return false;
-      return true;
-    });
-    const openGrantForUser = (user) => { grantTarget.value='single'; grantUserId.value=user.id; page.value='grant'; };
-    const executeGrant = async () => {
-      showGrantConfirm.value = false;
-      const targets = grantTarget.value==='all' ? allProfiles.value.map(u=>u.id) : [grantUserId.value];
-      const typeName = grantTypes.find(t=>t.id===grantType.value)?.label||grantType.value;
-      const targetName = grantTarget.value==='all' ? '全站' : (allProfiles.value.find(u=>u.id===grantUserId.value)?.name||'—');
-      let success = 0;
-      for (const uid of targets) {
-        try {
-          const docRef = await db.collection('users').doc(uid).get();
-          if (!docRef.exists) continue;
-          const data = JSON.parse(JSON.stringify(docRef.data()));
-          const users = data.users||[];
-          let idx = users.findIndex(u=>u.id===uid);
-          if (idx<0) { users.push({id:uid}); idx=users.length-1; }
-          if (grantType.value==='cards')  users[idx].cards  = Math.min(6,(users[idx].cards||0)+grantAmount.value);
-          if (grantType.value==='energy') users[idx].energy = (users[idx].energy||0)+grantAmount.value;
-          if (grantType.value==='shells') users[idx].shells = (users[idx].shells||0)+grantAmount.value;
-          if (grantType.value==='tiles') {
-            if (!users[idx].rewards) users[idx].rewards=[];
-            for (let i=0;i<grantAmount.value;i++) users[idx].rewards.push({id:Date.now()+i,type:'tile',title:'🏝️ 島嶼板塊！',desc:grantNote.value||'管理員發放',claimed:false});
-          }
-          if (grantType.value==='pet'||grantType.value==='decor') {
-            if (!users[idx].warehouse) users[idx].warehouse=[];
-            const pool = grantType.value==='pet'?petPool:decorPool;
-            const item = pool.find(p=>p.name===grantItemId.value);
-            if (item) users[idx].warehouse.push({id:Date.now(),name:item.name,emoji:item.emoji,type:grantType.value==='pet'?'animal':'decor'});
-          }
-          await db.collection('users').doc(uid).set({...data,users,updatedAt:Date.now()});
-          success++;
-        } catch(e) {}
-      }
-      await db.collection('grant_logs').add({targetName,target:grantTarget.value,targetId:grantUserId.value||'',typeName,type:grantType.value,amount:grantAmount.value,itemName:grantItemId.value||'',note:grantNote.value||'',timestamp:Date.now(),adminEmail:fbUser.value.email});
-      await loadGrantLogs();
-      showToast('✅ 已成功發放給 '+success+' 位使用者！');
-      grantType.value=''; grantAmount.value=1; grantNote.value=''; grantItemId.value='';
-    };
-
-    const annTitle = ref(''), annContent = ref(''), annType = ref('general'), showAnnConfirm = ref(false);
-    const annTypes = [{id:'general',icon:'📢',label:'一般公告'},{id:'urgent',icon:'🚨',label:'緊急通知'},{id:'event',icon:'🎉',label:'活動通知'},{id:'update',icon:'🆕',label:'版本更新'}];
-    const sendAnnouncement = async () => {
-      showAnnConfirm.value = false;
-      try {
-        const doc = { type:annType.value, title:annTitle.value, content:annContent.value, timestamp:Date.now(), adminEmail:fbUser.value.email };
-        await db.collection('announcements').add(doc);
-        announcements.value.unshift(doc);
-        annTitle.value=''; annContent.value='';
-        showToast('✅ 公告已發送！');
-      } catch(e) { showToast('❌ 發送失敗'); }
-    };
-
-    const showToast = (msg) => { toast.value=msg; setTimeout(()=>{toast.value='';},2800); };
-    const fmtDate = (ts) => {
-      if (!ts) return '—';
-      const d = new Date(ts);
-      return d.getFullYear()+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getDate().toString().padStart(2,'0')+' '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
-    };
-
-    onMounted(() => {
-      loadWhitelist();
-      auth.onAuthStateChanged(async (user) => {
-        if (user) {
-          if (isAdmin(user.email)) {
-            fbUser.value = user;
-            await Promise.all([loadStats(), loadAnnouncements(), loadGrantLogs()]);
-          } else { accessDenied.value = true; await auth.signOut(); }
-        } else { fbUser.value = null; }
-        loading.value = false;
-      });
-    });
-
-    return {
-      loading,fbUser,accessDenied,loginError,page,toast,
-      whitelist,newWhitelistEmail,addWhitelist,removeWhitelist,
-      signIn,signOut,allProfiles,feedbacks,announcements,recentLetters,grantLogs,stats,
-      userSearch,filteredProfiles,feedbackFilter,filteredFeedbacks,unreadFeedbackCount,markFeedbackRead,
-      grantTarget,grantUserId,grantType,grantAmount,grantNote,grantItemId,grantTypes,petPool,decorPool,canGrant,showGrantConfirm,openGrantForUser,executeGrant,
-      annTitle,annContent,annType,annTypes,showAnnConfirm,sendAnnouncement,
-      loadUsers,loadFeedbacks,loadAnnouncements,fmtDate,
-    };
-  }
-}).mount('#admin-app');
+const {createApp,ref,computed}=Vue;
+createApp({setup(){
+  const fbUser=ref(null),isAdmin=ref(false),loading=ref(true),lerr=ref(''),sending=ref(false);
+  const tab=ref('overview');
+  const tabs=[
+    {id:'overview',icon:'fa-solid fa-chart-line',label:'總覽'},
+    {id:'reward',icon:'fa-solid fa-gift',label:'發放道具'},
+    {id:'announce',icon:'fa-solid fa-bullhorn',label:'全站公告'},
+    {id:'feedback',icon:'fa-solid fa-comment-dots',label:'使用者反饋'},
+    {id:'whitelist',icon:'fa-solid fa-shield',label:'白名單'},
+  ];
+  const profiles=ref([]),feedbacks=ref([]),anns=ref([]),wl=ref(['agootw@gmail.com']);
+  const stats=ref({users:0,letters:0,ann:0}),toasts=ref([]),prevImg=ref(null);
+  const rTarget=ref('all'),selUsers=ref([]),uQ=ref('');
+  const rType=ref('energy'),rAmt=ref(100),rNote=ref(''),rShow=ref(false);
+  const rtypes=[{id:'energy',icon:'⚡',label:'能量'},{id:'cards',icon:'💌',label:'感謝卡'},{id:'tiles',icon:'🏝️',label:'島嶼板塊'},{id:'shells',icon:'🪙',label:'貝殼幣'}];
+  const aTitle=ref(''),aContent=ref(''),aShow=ref(false),newWL=ref(''),fbF=ref('all');
+  const adminAnns=computed(()=>anns.value.filter(a=>a.type==='admin'));
+  const filtP=computed(()=>{const q=uQ.value.trim().toLowerCase();if(!q)return profiles.value;return profiles.value.filter(p=>(p.name||'').toLowerCase().includes(q)||(p.email||'').toLowerCase().includes(q));});
+  const filtFb=computed(()=>{if(fbF.value==='unread')return feedbacks.value.filter(f=>!f.read);if(fbF.value==='read')return feedbacks.value.filter(f=>f.read);return feedbacks.value;});
+  const unreadFb=computed(()=>feedbacks.value.filter(f=>!f.read).length);
+  const toast=(msg,type='ok')=>{const id=Date.now();toasts.value.push({id,msg,type});setTimeout(()=>{toasts.value=toasts.value.filter(t=>t.id!==id);},3500);};
+  const fmtDate=(ts)=>{if(!ts)return'';const d=new Date(ts);return d.toLocaleDateString('zh-TW')+' '+d.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});};
+  const gname=(uid)=>profiles.value.find(p=>p.id===uid)?.name||uid;
+  const toggleU=(uid)=>{const i=selUsers.value.indexOf(uid);if(i>=0)selUsers.value.splice(i,1);else selUsers.value.push(uid);};
+  const signIn=async()=>{lerr.value='';try{await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());}catch(e){lerr.value='登入失敗';}};
+  const signOut=()=>auth.signOut();
+  const loadWL=async()=>{try{const d=await db.collection('admin_settings').doc('admin_config').get();if(d.exists&&d.data().emails?.length)wl.value=d.data().emails;else await db.collection('admin_settings').doc('admin_config').set({emails:['agootw@gmail.com']});}catch(e){}};
+  const loadData=async()=>{try{const[pS,lS,aS,fS]=await Promise.all([db.collection('profiles').get(),db.collection('letters').get(),db.collection('announcements').orderBy('timestamp','desc').get(),db.collection('feedback').orderBy('timestamp','desc').get()]);profiles.value=pS.docs.map(d=>d.data());stats.value.users=profiles.value.length;stats.value.letters=lS.size;anns.value=aS.docs.map(d=>({id:d.id,...d.data()}));stats.value.ann=anns.value.filter(a=>a.type==='admin').length;feedbacks.value=fS.docs.map(d=>({id:d.id,...d.data()}));}catch(e){console.error(e);}};
+  auth.onAuthStateChanged(async(user)=>{fbUser.value=user;if(user){await loadWL();isAdmin.value=wl.value.includes(user.email);if(isAdmin.value)await loadData();}loading.value=false;});
+  const addWL=async()=>{const e=newWL.value.trim().toLowerCase();if(!e||wl.value.includes(e))return;wl.value.push(e);await db.collection('admin_settings').doc('admin_config').set({emails:wl.value});newWL.value='';toast('✅ 已新增 '+e);};
+  const rmWL=async(email)=>{if(email===fbUser.value?.email){toast('不能移除自己！','err');return;}wl.value=wl.value.filter(e=>e!==email);await db.collection('admin_settings').doc('admin_config').set({emails:wl.value});toast('已移除 '+email);};
+  const openRC=()=>{if(rTarget.value==='select'&&selUsers.value.length===0)return;rShow.value=true;};
+  const doReward=async()=>{sending.value=true;try{const targets=rTarget.value==='all'?profiles.value.map(p=>p.id):selUsers.value;const rt=rtypes.find(r=>r.id===rType.value);const ts=Date.now();for(const uid of targets){try{const ud=await db.collection('users').doc(uid).get();if(!ud.exists)continue;const data=JSON.parse(JSON.stringify(ud.data()));const ul=data.users||[];let ui=ul.findIndex(u=>u.id===uid);if(ui<0){ul.push({id:uid});ui=ul.length-1;}const amt=rAmt.value;if(rType.value==='energy')ul[ui].energy=(ul[ui].energy||0)+amt;if(rType.value==='cards')ul[ui].cards=Math.min(6,(ul[ui].cards||0)+amt);if(rType.value==='tiles')ul[ui].tileCount=(ul[ui].tileCount||6)+amt;if(rType.value==='shells')ul[ui].shells=(ul[ui].shells||0)+amt;data.users=ul;await db.collection('users').doc(uid).set(data);await db.collection('inboxes').doc(uid).collection('items').add({type:'admin_reward',rewardType:rType.value,amount:amt,note:rNote.value||'',timestamp:ts,read:false,claimed:rType.value!=='tiles',title:'🎁 管理員發放了 '+rt.icon+rt.label+' ×'+amt+'！'});}catch(ue){}}if(rTarget.value==='all'){await db.collection('announcements').add({type:'admin_reward',title:'🎁 管理員發放了 '+rt.icon+rt.label+' ×'+rAmt.value+'！',content:'全站所有島民各獲得 '+rt.icon+rt.label+' ×'+rAmt.value+(rNote.value?'\n\n'+rNote.value:''),timestamp:ts});}toast('✅ 已發放給 '+targets.length+' 位使用者！');rShow.value=false;rNote.value='';selUsers.value=[];await loadData();}catch(e){toast('發放失敗','err');}sending.value=false;};
+  const openAC=()=>{if(aTitle.value.trim()&&aContent.value.trim())aShow.value=true;};
+  const doAnn=async()=>{sending.value=true;try{await db.collection('announcements').add({type:'admin',title:aTitle.value.trim(),content:aContent.value.trim(),timestamp:Date.now(),fromName:'感恩小島官方'});toast('✅ 全站公告已發送！');aShow.value=false;aTitle.value='';aContent.value='';await loadData();}catch(e){toast('發送失敗','err');}sending.value=false;};
+  const markRead=async(fb)=>{try{await db.collection('feedback').doc(fb.id).update({read:true});fb.read=true;}catch(e){}};
+  const delFb=async(fb)=>{if(!confirm('確定刪除？'))return;try{await db.collection('feedback').doc(fb.id).delete();feedbacks.value=feedbacks.value.filter(f=>f.id!==fb.id);toast('已刪除');}catch(e){toast('刪除失敗','err');}};
+  return{fbUser,isAdmin,loading,lerr,tab,tabs,sending,profiles,feedbacks,anns,adminAnns,wl,stats,toasts,prevImg,rTarget,selUsers,uQ,rType,rAmt,rNote,rShow,rtypes,aTitle,aContent,aShow,newWL,fbF,filtP,filtFb,unreadFb,signIn,signOut,fmtDate,gname,toggleU,addWL,rmWL,openRC,doReward,openAC,doAnn,markRead,delFb};
+}}).mount('#app');
 </script>
 </body>
 </html>
