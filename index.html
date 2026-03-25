@@ -1214,6 +1214,170 @@
         .reward-card-title { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
         .reward-card-desc { font-size: 12px; color: var(--text-sub); font-weight: 600; line-height: 1.6; }
 
+        /* ── 送出感謝確認彈窗 ── */
+        .send-confirm-overlay {
+            position: fixed; inset: 0; z-index: 800;
+            background: rgba(50,40,30,0.5); backdrop-filter: blur(6px);
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .send-confirm-modal {
+            background: var(--surface); border-radius: 28px;
+            border: 2px solid var(--border); width: 100%; max-width: 420px;
+            box-shadow: 0 24px 64px rgba(60,50,40,0.2);
+            animation: popReveal 0.35s cubic-bezier(0.175,0.885,0.32,1.275);
+            overflow: hidden;
+        }
+        .send-confirm-header {
+            background: linear-gradient(135deg, var(--primary-lt) 0%, #FFF8EC 100%);
+            padding: 28px 28px 20px; text-align: center;
+        }
+        .send-confirm-icon { font-size: 56px; display: block; margin-bottom: 8px;
+            animation: float-island 3s ease-in-out infinite; }
+        .send-confirm-title { font-size: 20px; font-weight: 900; color: var(--text); letter-spacing: -0.02em; }
+        .send-confirm-sub   { font-size: 13px; color: var(--text-sub); margin-top: 4px; font-weight: 500; }
+        .send-confirm-body  { padding: 20px 28px; }
+        .send-confirm-preview {
+            background: var(--surface-2); border-radius: var(--radius);
+            padding: 14px 16px; border-left: 4px solid var(--primary);
+            margin-bottom: 16px;
+        }
+        .send-confirm-to   { font-size: 12px; color: var(--primary-h); font-weight: 800; margin-bottom: 6px; }
+        .send-confirm-msg  { font-size: 14px; color: var(--text); line-height: 1.7; font-weight: 500;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .send-confirm-cost {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
+            background: #FFF4EC; border-radius: var(--radius-pill);
+            padding: 8px 14px; font-size: 13px; font-weight: 700; color: var(--accent);
+            border: 1.5px solid rgba(232,168,124,0.4);
+        }
+        .send-confirm-btns { display: flex; gap: 10px; }
+        .send-confirm-cancel {
+            flex: 1; padding: 12px; border-radius: var(--radius-pill);
+            border: 2px solid var(--border); background: var(--surface);
+            font-size: 14px; font-weight: 700; color: var(--text-sub);
+            cursor: pointer; transition: all 0.15s; font-family: 'Noto Sans TC', sans-serif;
+        }
+        .send-confirm-cancel:hover { border-color: var(--text-sub); color: var(--text); }
+        .send-confirm-ok {
+            flex: 2; padding: 12px; border-radius: var(--radius-pill);
+            border: none; background: var(--primary);
+            font-size: 14px; font-weight: 800; color: #fff;
+            cursor: pointer; transition: all 0.15s; font-family: 'Noto Sans TC', sans-serif;
+            box-shadow: 0 4px 14px rgba(123,174,138,0.4);
+        }
+        .send-confirm-ok:hover { background: var(--primary-h); transform: translateY(-1px); }
+
+        /* ── 大嘴鳥送信動畫 ── */
+        .toucan-overlay {
+            position: fixed; inset: 0; z-index: 900;
+            background: linear-gradient(135deg, #E8F5E9 0%, #FFF8EC 50%, #E3F2FD 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 0;
+        }
+        .toucan-scene { position: relative; width: 280px; height: 260px; }
+        .toucan-bird {
+            font-size: 96px; position: absolute; top: 20px; left: 50%;
+            transform: translateX(-50%);
+            animation: toucanFly 0.6s ease-in-out infinite alternate,
+                       toucanEnter 0.8s cubic-bezier(0.175,0.885,0.32,1.275) forwards;
+        }
+        @keyframes toucanEnter {
+            0%   { opacity: 0; transform: translateX(-50%) translateY(60px) scale(0.5); }
+            100% { opacity: 1; transform: translateX(-50%) translateY(0px) scale(1); }
+        }
+        @keyframes toucanFly {
+            from { transform: translateX(-50%) translateY(0px) rotate(-4deg); }
+            to   { transform: translateX(-50%) translateY(-14px) rotate(4deg); }
+        }
+        .toucan-letter {
+            font-size: 36px; position: absolute; bottom: 40px; left: 50%;
+            transform: translateX(-50%);
+            animation: letterWiggle 0.8s ease-in-out infinite alternate;
+        }
+        @keyframes letterWiggle {
+            from { transform: translateX(-50%) rotate(-8deg) scale(0.95); }
+            to   { transform: translateX(-50%) rotate(8deg)  scale(1.05); }
+        }
+        .toucan-stars {
+            position: absolute; width: 100%; height: 100%; pointer-events: none;
+        }
+        .toucan-star {
+            position: absolute; font-size: 20px;
+            animation: starPop 1.5s ease-in-out infinite;
+        }
+        @keyframes starPop {
+            0%, 100% { transform: scale(0.5) rotate(0deg);   opacity: 0.4; }
+            50%       { transform: scale(1.3) rotate(180deg); opacity: 1; }
+        }
+        .toucan-bubble {
+            background: rgba(255,255,255,0.95); border-radius: 20px;
+            padding: 16px 24px; max-width: 300px; text-align: center;
+            border: 2px solid var(--border); position: relative;
+            box-shadow: 0 8px 24px rgba(100,80,60,0.1);
+            animation: bubbleIn 0.5s 0.4s cubic-bezier(0.175,0.885,0.32,1.275) both;
+        }
+        @keyframes bubbleIn {
+            0%   { opacity: 0; transform: scale(0.7) translateY(20px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .toucan-bubble::before {
+            content: ''; position: absolute; top: -12px; left: 50%;
+            transform: translateX(-50%);
+            border: 8px solid transparent; border-bottom-color: var(--border);
+        }
+        .toucan-bubble::after {
+            content: ''; position: absolute; top: -9px; left: 50%;
+            transform: translateX(-50%);
+            border: 7px solid transparent; border-bottom-color: #fff;
+        }
+        .toucan-bubble-text {
+            font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.6;
+        }
+        .toucan-bubble-text em { color: var(--primary-h); font-style: normal; font-weight: 900; }
+
+        /* ── 送達畫面 ── */
+        .sent-overlay {
+            position: fixed; inset: 0; z-index: 900;
+            background: linear-gradient(135deg, #E8F5E9 0%, #FFF8EC 50%, #E3F2FD 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 20px;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .sent-icon {
+            font-size: 80px; animation: sentBounce 0.6s cubic-bezier(0.175,0.885,0.32,1.275) both;
+        }
+        @keyframes sentBounce {
+            0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+            70%  { transform: scale(1.2) rotate(5deg);  opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        .sent-title {
+            font-size: 26px; font-weight: 900; color: var(--primary-h);
+            letter-spacing: -0.02em; text-align: center;
+            animation: sentSlideUp 0.5s 0.2s both;
+        }
+        .sent-sub {
+            font-size: 14px; color: var(--text-sub); font-weight: 600; text-align: center;
+            line-height: 1.7; max-width: 280px;
+            animation: sentSlideUp 0.5s 0.35s both;
+        }
+        .sent-confetti {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; overflow: hidden;
+        }
+        .confetti-piece {
+            position: absolute; top: -20px; font-size: 18px;
+            animation: confettiFall linear forwards;
+        }
+        @keyframes confettiFall {
+            to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+        @keyframes sentSlideUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
         /* 公告卡片 */
         .notice-card { border-color: var(--primary) !important; background: var(--primary-lt) !important; }
         .notice-avatar {
@@ -1827,20 +1991,20 @@
                 <div class="gacha-card">
                     <div class="gacha-card-header">
                         <div>
-                            <div class="gacha-title">🐾 動物夥伴招募</div>
+                            <div class="gacha-title">🐾 邀請動物朋友</div>
                             <div class="gacha-desc">招募可愛動物來到你的營地</div>
                         </div>
                         <button @click="openPool('pet')" class="pool-preview-btn">卡池一覽</button>
                     </div>
                     <div class="btn-row">
-                        <button @click="triggerGacha('pet', false)" class="btn-primary" :disabled="(currentUser?.energy || 0) < 500">
-                            招募 <span class="cost-badge">-500 ⚡</span>
+                        <button @click="triggerGacha('pet', false)" class="btn-primary" :disabled="(currentUser?.energy || 0) < 100">
+                            邀請 <span class="cost-badge">-100 ⚡</span>
                         </button>
                         <button @click="triggerGacha('pet', true)" class="btn-outline">測試</button>
                     </div>
                     <div class="btn-row" style="margin-top:8px;">
-                        <button @click="triggerGacha10('pet', false)" class="btn-primary btn-ten" :disabled="(currentUser?.energy || 0) < 5000">
-                            ✨ 十連招募 <span class="cost-badge">-5000 ⚡</span>
+                        <button @click="triggerGacha10('pet', false)" class="btn-primary btn-ten" :disabled="(currentUser?.energy || 0) < 900">
+                            ✨ 十連邀請 <span class="cost-badge">-900 ⚡</span>
                         </button>
                     </div>
                     <div class="gacha-bg">🦊</div>
@@ -1856,14 +2020,14 @@
                         <button @click="openPool('decor')" class="pool-preview-btn">卡池一覽</button>
                     </div>
                     <div class="btn-row">
-                        <button @click="triggerGacha('decor', false)" class="btn-primary" :disabled="(currentUser?.energy || 0) < 300">
-                            探索 <span class="cost-badge">-300 ⚡</span>
+                        <button @click="triggerGacha('decor', false)" class="btn-primary" :disabled="(currentUser?.energy || 0) < 100">
+                            探索 <span class="cost-badge">-100 ⚡</span>
                         </button>
                         <button @click="triggerGacha('decor', true)" class="btn-outline">測試</button>
                     </div>
                     <div class="btn-row" style="margin-top:8px;">
-                        <button @click="triggerGacha10('decor', false)" class="btn-primary btn-ten" :disabled="(currentUser?.energy || 0) < 3000">
-                            ✨ 十連探索 <span class="cost-badge">-3000 ⚡</span>
+                        <button @click="triggerGacha10('decor', false)" class="btn-primary btn-ten" :disabled="(currentUser?.energy || 0) < 900">
+                            ✨ 十連探索 <span class="cost-badge">-900 ⚡</span>
                         </button>
                     </div>
                     <div class="gacha-bg">🌳</div>
@@ -1963,7 +2127,7 @@
                         <textarea v-model="letterForm.content" rows="5" class="form-input" placeholder="說說你想感謝的事...✨"></textarea>
                     </div>
 
-                    <button @click="sendLetter"
+                    <button @click="openSendConfirm"
                         :disabled="!letterForm.toId || !letterForm.content.trim() || (currentUser?.cards || 0) < letterForm.cost"
                         class="send-btn">
                         <i class="fa-solid fa-paper-plane"></i>
@@ -2280,6 +2444,75 @@
                     <i class="fa-solid fa-check"></i> 儲存頭像
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- 送出感謝確認彈窗 -->
+    <div v-if="sendConfirmShow" class="send-confirm-overlay" @click.self="sendConfirmShow=false">
+        <div class="send-confirm-modal">
+            <div class="send-confirm-header">
+                <span class="send-confirm-icon">💌</span>
+                <div class="send-confirm-title">確認送出感謝？</div>
+                <div class="send-confirm-sub">送出後無法收回，請確認內容沒問題喔 🌿</div>
+            </div>
+            <div class="send-confirm-body">
+                <div class="send-confirm-preview">
+                    <div class="send-confirm-to">📮 送給：{{ getDisplayName(letterForm.toId) }}</div>
+                    <div class="send-confirm-msg">{{ letterForm.content }}</div>
+                </div>
+                <div class="send-confirm-cost">
+                    <i class="fa-regular fa-paper-plane"></i>
+                    消耗 {{ letterForm.cost }} 張感謝卡
+                    <span style="margin-left:auto;color:var(--text-sub);font-size:11px;">剩餘 {{ (currentUser?.cards||0) - letterForm.cost }} 張</span>
+                </div>
+                <div class="send-confirm-btns">
+                    <button class="send-confirm-cancel" @click="sendConfirmShow=false">再想想</button>
+                    <button class="send-confirm-ok" @click="confirmAndSend">
+                        <i class="fa-solid fa-paper-plane"></i> 送出去！
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 大嘴鳥送信動畫 -->
+    <div v-if="toucanShow" class="toucan-overlay">
+        <div class="toucan-scene">
+            <div class="toucan-stars">
+                <span class="toucan-star" style="top:8%;left:10%;animation-delay:0s;">✨</span>
+                <span class="toucan-star" style="top:15%;right:8%;animation-delay:0.4s;">⭐</span>
+                <span class="toucan-star" style="top:60%;left:5%;animation-delay:0.8s;">🌟</span>
+                <span class="toucan-star" style="top:55%;right:6%;animation-delay:0.2s;">✨</span>
+                <span class="toucan-star" style="top:80%;left:20%;animation-delay:0.6s;">💫</span>
+                <span class="toucan-star" style="top:75%;right:18%;animation-delay:1s;">⭐</span>
+            </div>
+            <div class="toucan-bird">🦜</div>
+            <div class="toucan-letter">📩</div>
+        </div>
+        <div class="toucan-bubble">
+            <div class="toucan-bubble-text">
+                我會將你的感謝<br>
+                <em>送到對方手上的！</em> 🌿
+            </div>
+        </div>
+    </div>
+
+    <!-- 送達畫面 -->
+    <div v-if="sentShow" class="sent-overlay">
+        <div class="sent-confetti">
+            <span v-for="n in 18" :key="n" class="confetti-piece"
+                :style="{
+                    left: (n*5.5)+'%',
+                    animationDuration: (1.8 + n%4 * 0.4)+'s',
+                    animationDelay: (n * 0.07)+'s',
+                    fontSize: (14+n%3*5)+'px'
+                }">{{ ['🌸','🌿','⭐','💛','🍀','💌','✨'][n%7] }}</span>
+        </div>
+        <div class="sent-icon">🏝️</div>
+        <div class="sent-title">感恩之心已送達！</div>
+        <div class="sent-sub">
+            你的感謝像一陣暖風 🌿<br>
+            正在飛向 <strong>{{ sentToName }}</strong> 的小島
         </div>
     </div>
 
@@ -3052,6 +3285,38 @@ createApp({
             });
         };
 
+        // ── 送出感謝：確認彈窗 + 動畫 ──
+        const sendConfirmShow = ref(false);
+        const toucanShow      = ref(false);
+        const sentShow        = ref(false);
+        const sentToName      = ref('');
+
+        const openSendConfirm = () => {
+            if (!letterForm.toId || !letterForm.content.trim()) return;
+            sendConfirmShow.value = true;
+        };
+
+        const confirmAndSend = async () => {
+            sendConfirmShow.value = false;
+            sentToName.value = getDisplayName(letterForm.toId);
+
+            // 1. 大嘴鳥動畫（3秒）
+            toucanShow.value = true;
+            await sendLetter(); // 背景執行送信
+
+            setTimeout(() => {
+                // 2. 大嘴鳥消失，送達畫面出現
+                toucanShow.value = false;
+                sentShow.value   = true;
+
+                // 3. 2秒後送達畫面消失，跳到佈告欄
+                setTimeout(() => {
+                    sentShow.value = false;
+                    switchTab('wall');
+                }, 2200);
+            }, 3000);
+        };
+
         const adjustCardCost = (d) => {
             const next = letterForm.cost + d;
             if (next < 1 || next > (currentUser.value?.cards || 0)) return;
@@ -3118,7 +3383,7 @@ createApp({
             letterForm.toId    = '';
             letterForm.cost    = 1;
             recipientInput.value = '';
-            switchTab('wall');
+            // 頁面跳轉由動畫結束後控制（confirmAndSend 負責）
         };
 
         // ── 信件彈窗 ──
@@ -3388,7 +3653,7 @@ createApp({
             ],
             shop: [
                 '🛍️ 用感謝換來的能量，招募夥伴、探索裝飾！',
-                '🐾 動物夥伴招募 (500⚡) — 隨機召喚一位可愛動物來你的島上定居！',
+                '🐾 邀請動物朋友 (100⚡) — 隨機邀請一位可愛動物來你的島上定居！',
                 '🏕️ 裝飾品探索 (300⚡) — 發現各種島嶼裝飾，讓你的島更獨特！',
                 '✨ 十連招募/探索 — 一次抽 10 個，還保證至少 1 個稀有以上！',
                 '稀有度分為：普通 / 💎 稀有 / ⭐ 傳說',
@@ -3592,7 +3857,7 @@ createApp({
         };
 
         const triggerGacha = (type = 'pet', isTest = false) => {
-            const cost = type === 'pet' ? 500 : 300;
+            const cost = type === 'pet' ? 100 : 100;
             if (!isTest && (currentUser.value?.energy || 0) < cost) {
                 alert(`能量不足 (需要 ${cost} ⚡)`); return;
             }
@@ -3635,7 +3900,7 @@ createApp({
         };
 
         const triggerGacha10 = (type = 'pet', isTest = false) => {
-            const cost = type === 'pet' ? 5000 : 3000;
+            const cost = type === 'pet' ? 900 : 900;
             if (!isTest && (currentUser.value?.energy || 0) < cost) {
                 alert(`能量不足 (需要 ${cost} ⚡)`); return;
             }
@@ -3753,6 +4018,7 @@ createApp({
             getUserById, getDisplayName, getDisplayInitial, getUserAvatar, getLetterName, formatDate,
             switchUser, visitUser, stopVisiting, switchTab,
             sendLetter, adjustCardCost, markAsRead, toggleLike, isLiked,
+            sendConfirmShow, toucanShow, sentShow, sentToName, openSendConfirm, confirmAndSend,
             openLetter, openLetterModal,
             showAvatarModal, avatarPreviewUrl, avatarPosX, avatarPosY, onAvatarFileChange, saveAvatar,
             recipientInput, showSuggestions, filteredSuggestions,
