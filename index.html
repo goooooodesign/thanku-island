@@ -688,6 +688,40 @@
         .send-btn:hover:not(:disabled) { background: var(--primary-h); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(123,174,138,0.5); }
         .send-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
 
+        /* 送出按鈕排列 */
+        .send-btn-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .send-btn-row .send-btn { flex: 1; }
+
+        /* 匿名感謝按鈕 */
+        .anon-btn {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 14px 18px; border-radius: var(--radius-pill);
+            border: 2px solid #9B8BE0; background: #F0EAF8;
+            font-size: 14px; font-weight: 800; color: #6A5ACD;
+            cursor: pointer; transition: all 0.18s; white-space: nowrap;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .anon-btn:hover:not(:disabled) { background: #6A5ACD; color: #fff; border-color: #6A5ACD; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(106,90,205,0.35); }
+        .anon-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        /* 匿名說明連結 */
+        .anon-hint {
+            font-size: 12px; color: var(--text-sub); font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; gap: 5px;
+            padding: 4px 0; transition: color 0.15s;
+        }
+        .anon-hint:hover { color: #6A5ACD; }
+
+        /* 匿名規則說明項目 */
+        .anon-rule-item {
+            display: flex; align-items: flex-start; gap: 12px;
+            background: var(--surface-2); border-radius: var(--radius);
+            padding: 12px 14px; border: 1.5px solid var(--border);
+        }
+        .anon-rule-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+        .anon-rule-title { font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 3px; }
+        .anon-rule-desc  { font-size: 12px; color: var(--text-sub); font-weight: 500; line-height: 1.6; }
+
         /* ===== Wall 佈告欄 ===== */
         .wall-hero { text-align:center; padding: 24px 0 20px; }
         .wall-hero-deco { font-size: 20px; margin-bottom: 4px; letter-spacing: 6px; }
@@ -2127,12 +2161,23 @@
                         <textarea v-model="letterForm.content" rows="5" class="form-input" placeholder="說說你想感謝的事...✨"></textarea>
                     </div>
 
-                    <button @click="openSendConfirm"
-                        :disabled="!letterForm.toId || !letterForm.content.trim() || (currentUser?.cards || 0) < letterForm.cost"
-                        class="send-btn">
-                        <i class="fa-solid fa-paper-plane"></i>
-                        送出感謝 (消耗 {{ letterForm.cost }} 張卡)
-                    </button>
+                    <div class="send-btn-row">
+                        <button @click="openSendConfirm"
+                            :disabled="!letterForm.toId || !letterForm.content.trim() || (currentUser?.cards || 0) < letterForm.cost"
+                            class="send-btn">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            送出感謝 (消耗 {{ letterForm.cost }} 張卡)
+                        </button>
+                        <button @click="openAnonConfirm"
+                            :disabled="!letterForm.toId || !letterForm.content.trim() || (currentUser?.cards || 0) < letterForm.cost"
+                            class="anon-btn">
+                            <i class="fa-solid fa-mask"></i>
+                            匿名感謝
+                        </button>
+                    </div>
+                    <div class="anon-hint" @click="isAnon=false; showAnonInfo=true">
+                        <i class="fa-solid fa-circle-info"></i> 什麼是匿名感謝？
+                    </div>
                 </div>
             </div>
 
@@ -2158,7 +2203,8 @@
                         <div class="wall-card-top">
                             <div class="wall-avatars">
                                 <div class="wall-avatar from">
-                                    <img v-if="getUserAvatar(letter.from)" :src="getUserAvatar(letter.from).url" :style="{objectPosition: getUserAvatar(letter.from).posX+'% '+getUserAvatar(letter.from).posY+'%'}" :alt="getLetterName(letter,'from')">
+                                    <span v-if="letter.anon">🎭</span>
+                                    <img v-else-if="getUserAvatar(letter.from)" :src="getUserAvatar(letter.from).url" :style="{objectPosition: getUserAvatar(letter.from).posX+'% '+getUserAvatar(letter.from).posY+'%'}" :alt="getLetterName(letter,'from')">
                                     <span v-else>{{ getLetterName(letter,'from')[0] }}</span>
                                 </div>
                                 <div class="wall-arrow">💌</div>
@@ -2443,6 +2489,80 @@
                 <button v-if="avatarPreviewUrl" @click="saveAvatar" class="btn-primary" style="width:100%;">
                     <i class="fa-solid fa-check"></i> 儲存頭像
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 匿名感謝說明彈窗 -->
+    <div v-if="showAnonInfo" class="send-confirm-overlay" @click.self="showAnonInfo=false">
+        <div class="send-confirm-modal">
+            <div class="send-confirm-header" style="background:linear-gradient(135deg,#F0EAF8,#EEF4FF);">
+                <span class="send-confirm-icon">🎭</span>
+                <div class="send-confirm-title" style="color:#6A5ACD;">什麼是匿名感謝？</div>
+                <div class="send-confirm-sub">讓你自在說出心裡話 💜</div>
+            </div>
+            <div class="send-confirm-body">
+                <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
+                    <div class="anon-rule-item">
+                        <span class="anon-rule-icon">👁️</span>
+                        <div>
+                            <div class="anon-rule-title">佈告欄只顯示「神秘人」</div>
+                            <div class="anon-rule-desc">所有人在佈告欄看到的寄件者是「神秘人 🎭」，不知道是誰送的</div>
+                        </div>
+                    </div>
+                    <div class="anon-rule-item">
+                        <span class="anon-rule-icon">💌</span>
+                        <div>
+                            <div class="anon-rule-title">收件者可以看到你是誰</div>
+                            <div class="anon-rule-desc">只有收到感謝的本人，才能在信箱裡看到真正的寄件者名稱</div>
+                        </div>
+                    </div>
+                    <div class="anon-rule-item">
+                        <span class="anon-rule-icon">🏝️</span>
+                        <div>
+                            <div class="anon-rule-title">獎勵照樣發送</div>
+                            <div class="anon-rule-desc">匿名不影響能量和板塊的獎勵，收件者一樣可以領取</div>
+                        </div>
+                    </div>
+                    <div class="anon-rule-item" style="background:#FFF4EC;border-color:rgba(232,168,124,0.3);">
+                        <span class="anon-rule-icon">⚠️</span>
+                        <div>
+                            <div class="anon-rule-title" style="color:var(--accent);">管理員仍然知道是誰</div>
+                            <div class="anon-rule-desc">為了維護平台安全，系統後台仍會記錄真實寄件者，請勿濫用匿名功能</div>
+                        </div>
+                    </div>
+                </div>
+                <button class="send-confirm-ok" style="width:100%;" @click="showAnonInfo=false; if(isAnon) anonConfirmShow=true">
+                    {{ isAnon ? '我了解了，繼續送出 👍' : '我了解了 👍' }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 匿名感謝確認彈窗 -->
+    <div v-if="anonConfirmShow" class="send-confirm-overlay" @click.self="anonConfirmShow=false">
+        <div class="send-confirm-modal">
+            <div class="send-confirm-header" style="background:linear-gradient(135deg,#F0EAF8,#EEF4FF);">
+                <span class="send-confirm-icon">🎭</span>
+                <div class="send-confirm-title" style="color:#6A5ACD;">確認匿名送出？</div>
+                <div class="send-confirm-sub">佈告欄將顯示「神秘人」，收件者信箱仍看得到你 💜</div>
+            </div>
+            <div class="send-confirm-body">
+                <div class="send-confirm-preview">
+                    <div class="send-confirm-to">📮 送給：{{ getDisplayName(letterForm.toId) }}</div>
+                    <div class="send-confirm-msg">{{ letterForm.content }}</div>
+                </div>
+                <div class="send-confirm-cost" style="background:#F0EAF8;border-color:rgba(106,90,205,0.2);color:#6A5ACD;">
+                    <i class="fa-solid fa-mask"></i>
+                    匿名模式 · 消耗 {{ letterForm.cost }} 張感謝卡
+                    <span style="margin-left:auto;color:var(--text-sub);font-size:11px;">剩餘 {{ (currentUser?.cards||0) - letterForm.cost }} 張</span>
+                </div>
+                <div class="send-confirm-btns">
+                    <button class="send-confirm-cancel" @click="anonConfirmShow=false">再想想</button>
+                    <button class="send-confirm-ok" style="background:#6A5ACD;box-shadow:0 4px 14px rgba(106,90,205,0.35);" @click="confirmAndSendAnon">
+                        <i class="fa-solid fa-mask"></i> 匿名送出！
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -3170,14 +3290,14 @@ createApp({
 
         // 從信件物件取得寄件人/收件人名字（支援 globalLetters 的 fromName/toName）
         const getLetterName = (letter, role) => {
+            // 佈告欄匿名：寄件者顯示「神秘人 🎭」
+            if (role === 'from' && letter.anon) return '神秘人 🎭';
             const id = role === 'from' ? letter.from : letter.to;
             const stored = role === 'from' ? letter.fromName : letter.toName;
-            // 優先從 allProfiles / users 找最新名字
             const u = users.value.find(u => u.id === id);
             if (u?.name) return u.name;
             const p = allProfiles.value.find(p => p.id === id);
             if (p?.name) return p.name;
-            // fallback 用信件內儲存的名字
             if (stored) return stored;
             if (id === currentUserId.value) return fbUser.value?.displayName || '我';
             return '未知';
@@ -3287,34 +3407,48 @@ createApp({
 
         // ── 送出感謝：確認彈窗 + 動畫 ──
         const sendConfirmShow = ref(false);
+        const anonConfirmShow = ref(false);
+        const showAnonInfo    = ref(false);
+        const isAnon          = ref(false);
         const toucanShow      = ref(false);
         const sentShow        = ref(false);
         const sentToName      = ref('');
 
         const openSendConfirm = () => {
             if (!letterForm.toId || !letterForm.content.trim()) return;
+            isAnon.value = false;
             sendConfirmShow.value = true;
         };
 
-        const confirmAndSend = async () => {
-            sendConfirmShow.value = false;
-            sentToName.value = getDisplayName(letterForm.toId);
+        const openAnonConfirm = () => {
+            if (!letterForm.toId || !letterForm.content.trim()) return;
+            isAnon.value = true;
+            showAnonInfo.value = true; // 先顯示說明
+        };
 
-            // 1. 大嘴鳥動畫（3秒）
+        const runSendAnimation = async () => {
             toucanShow.value = true;
-            await sendLetter(); // 背景執行送信
-
+            await sendLetter(isAnon.value);
             setTimeout(() => {
-                // 2. 大嘴鳥消失，送達畫面出現
                 toucanShow.value = false;
                 sentShow.value   = true;
-
-                // 3. 2秒後送達畫面消失，跳到佈告欄
                 setTimeout(() => {
                     sentShow.value = false;
                     switchTab('wall');
                 }, 2200);
             }, 3000);
+        };
+
+        const confirmAndSend = async () => {
+            sendConfirmShow.value = false;
+            sentToName.value = getDisplayName(letterForm.toId);
+            await runSendAnimation();
+        };
+
+        const confirmAndSendAnon = async () => {
+            anonConfirmShow.value = false;
+            sentToName.value = getDisplayName(letterForm.toId);
+            await runSendAnimation();
         };
 
         const adjustCardCost = (d) => {
@@ -3323,7 +3457,7 @@ createApp({
             letterForm.cost = next;
         };
 
-        const sendLetter = async () => {
+        const sendLetter = async (anon = false) => {
             if (!letterForm.toId || !letterForm.content.trim()) { alert('請填寫收件人與訊息。'); return; }
             const sender   = users.value.find(u => u.id === currentUserId.value);
             const toId     = letterForm.toId;
@@ -3366,11 +3500,13 @@ createApp({
 
             // ── 寫入全站 letters（佈告欄）──
             const newLetter = {
-                from: sender.id, to: toId,
-                fromName: sender.name || '',
-                toName: allProfiles.value.find(p => p.id === toId)?.name || '',
-                content: letterForm.content,
-                timestamp: ts, cardCost: cost, likes: [], read: false
+                from:     anon ? 'anon' : sender.id,
+                fromName: anon ? '神秘人 🎭' : (sender.name || ''),
+                to:       toId,
+                toName:   allProfiles.value.find(p => p.id === toId)?.name || '',
+                content:  letterForm.content,
+                timestamp: ts, cardCost: cost, likes: [], read: false,
+                anon: anon,
             };
             try {
                 const docRef = await db.collection('letters').add(newLetter);
@@ -4018,7 +4154,9 @@ createApp({
             getUserById, getDisplayName, getDisplayInitial, getUserAvatar, getLetterName, formatDate,
             switchUser, visitUser, stopVisiting, switchTab,
             sendLetter, adjustCardCost, markAsRead, toggleLike, isLiked,
-            sendConfirmShow, toucanShow, sentShow, sentToName, openSendConfirm, confirmAndSend,
+            sendConfirmShow, anonConfirmShow, showAnonInfo, isAnon,
+            toucanShow, sentShow, sentToName,
+            openSendConfirm, openAnonConfirm, confirmAndSend, confirmAndSendAnon,
             openLetter, openLetterModal,
             showAvatarModal, avatarPreviewUrl, avatarPosX, avatarPosY, onAvatarFileChange, saveAvatar,
             recipientInput, showSuggestions, filteredSuggestions,
