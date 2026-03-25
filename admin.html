@@ -359,7 +359,7 @@ createApp({setup(){
     {id:'feedback',icon:'fa-solid fa-comment-dots',label:'使用者反饋'},
     {id:'whitelist',icon:'fa-solid fa-shield',label:'白名單'},
   ];
-  const profiles=ref([]),feedbacks=ref([]),anns=ref([]),wl=ref(['agootw@gmail.com']);
+  const profiles=ref([]),feedbacks=ref([]),anns=ref([]),wl=ref(['changag@garena.com']);
   const stats=ref({users:0,letters:0,ann:0}),toasts=ref([]),prevImg=ref(null);
   const rTarget=ref('all'),selUsers=ref([]),uQ=ref('');
   const rType=ref('energy'),rAmt=ref(100),rNote=ref(''),rShow=ref(false);
@@ -375,7 +375,7 @@ createApp({setup(){
   const toggleU=(uid)=>{const i=selUsers.value.indexOf(uid);if(i>=0)selUsers.value.splice(i,1);else selUsers.value.push(uid);};
   const signIn=async()=>{lerr.value='';try{await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());}catch(e){lerr.value='登入失敗';}};
   const signOut=()=>auth.signOut();
-  const loadWL=async()=>{try{const d=await db.collection('admin_settings').doc('admin_config').get();if(d.exists&&d.data().emails?.length)wl.value=d.data().emails;else await db.collection('admin_settings').doc('admin_config').set({emails:['agootw@gmail.com']});}catch(e){}};
+  const loadWL=async()=>{try{const d=await db.collection('admin_settings').doc('admin_config').get();if(d.exists&&d.data().emails?.length)wl.value=d.data().emails;else await db.collection('admin_settings').doc('admin_config').set({emails:['changag@garena.com']});}catch(e){}};
   const loadData=async()=>{try{const[pS,lS,aS,fS]=await Promise.all([db.collection('profiles').get(),db.collection('letters').get(),db.collection('announcements').orderBy('timestamp','desc').get(),db.collection('feedback').orderBy('timestamp','desc').get()]);profiles.value=pS.docs.map(d=>d.data());stats.value.users=profiles.value.length;stats.value.letters=lS.size;anns.value=aS.docs.map(d=>({id:d.id,...d.data()}));stats.value.ann=anns.value.filter(a=>a.type==='admin').length;feedbacks.value=fS.docs.map(d=>({id:d.id,...d.data()}));}catch(e){console.error(e);}};
   auth.onAuthStateChanged(async(user)=>{fbUser.value=user;if(user){await loadWL();isAdmin.value=wl.value.includes(user.email);if(isAdmin.value)await loadData();}loading.value=false;});
   const addWL=async()=>{const e=newWL.value.trim().toLowerCase();if(!e||wl.value.includes(e))return;wl.value.push(e);await db.collection('admin_settings').doc('admin_config').set({emails:wl.value});newWL.value='';toast('✅ 已新增 '+e);};
