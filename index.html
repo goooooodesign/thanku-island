@@ -2040,8 +2040,8 @@
                             {{ index===0 ? '🥇' : index===1 ? '🥈' : index===2 ? '🥉' : String(index+1).padStart(2,'0') }}
                         </div>
                         <div class="sea-avatar">
-                            <img v-if="getUserAvatar(user.id)" :src="getUserAvatar(user.id).url" :style="{objectPosition: getUserAvatar(user.id).posX+'% '+getUserAvatar(user.id).posY+'%'}" :alt="user.name">
-                            <span v-else>{{ user.name[0] }}</span>
+                            <img v-if="getProfileAvatar(user.id)" :src="getProfileAvatar(user.id).url" :style="{objectPosition: getProfileAvatar(user.id).posX+'% '+getProfileAvatar(user.id).posY+'%'}" :alt="user.name">
+                            <span v-else>{{ (user.name||'?')[0] }}</span>
                         </div>
                         <div class="sea-info">
                             <div class="sea-name">{{ user.name }}</div>
@@ -2075,8 +2075,8 @@
                     <div class="sea-explore-grid">
                         <div v-for="user in seaFilteredUsers" :key="user.id" class="sea-explore-card">
                             <div class="sea-explore-avatar">
-                                <img v-if="getUserAvatar(user.id)" :src="getUserAvatar(user.id).url" :style="{objectPosition: getUserAvatar(user.id).posX+'% '+getUserAvatar(user.id).posY+'%'}" :alt="user.name">
-                                <span v-else>{{ user.name[0] }}</span>
+                                <img v-if="getProfileAvatar(user.id)" :src="getProfileAvatar(user.id).url" :style="{objectPosition: getProfileAvatar(user.id).posX+'% '+getProfileAvatar(user.id).posY+'%'}" :alt="user.name">
+                                <span v-else>{{ (user.name||'?')[0] }}</span>
                             </div>
                             <div class="sea-explore-name">{{ user.name }}</div>
                             <div class="sea-explore-stat">
@@ -2420,11 +2420,25 @@ createApp({
             return (users.value.find(u => u.id === id) || {}).island || [];
         });
         // ── Sea 群島分頁 ──
-        const seaTab    = ref('rank');
-        const seaSearch = ref('');
+        const seaTab     = ref('rank');
+        const seaSearch  = ref('');
+        const allProfiles = ref([]); // 從 Firestore profiles collection 讀取的所有使用者
+
+        // getUserAvatar 也要支援 allProfiles（讓 Sea 群島顯示其他人頭像）
+        const getProfileAvatar = (id) => {
+            // 先從本地 users 找（自己）
+            const local = users.value.find(u => u.id === id);
+            if (local?.avatarUrl) return { url: local.avatarUrl, posX: local.avatarPosX ?? 50, posY: local.avatarPosY ?? 50 };
+            // 再從 allProfiles 找
+            const p = allProfiles.value.find(p => p.id === id);
+            if (p?.avatarUrl) return { url: p.avatarUrl, posX: p.avatarPosX ?? 50, posY: p.avatarPosY ?? 50 };
+            if (id === currentUserId.value && fbUser.value?.photoURL) return { url: fbUser.value.photoURL, posX: 50, posY: 50 };
+            return null;
+        };
 
         const seaUserStats = computed(() => {
             const map = {};
+            allProfiles.value.forEach(p => { map[p.id] = 0; });
             users.value.forEach(u => { map[u.id] = 0; });
             letters.value.forEach(l => { if (map[l.to] !== undefined) map[l.to]++; });
             return map;
@@ -2432,20 +2446,31 @@ createApp({
 
         const seaFilteredUsers = computed(() => {
             const q = seaSearch.value.trim().toLowerCase();
-            const all = [...users.value].sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
+            // 合併 allProfiles + 自己（避免自己不在 profiles 的邊界情況）
+            const profileMap = {};
+            allProfiles.value.forEach(p => { profileMap[p.id] = p; });
+            const me = users.value.find(u => u.id === currentUserId.value);
+            if (me) profileMap[me.id] = { id: me.id, name: me.name, email: me.email, avatarUrl: me.avatarUrl, avatarPosX: me.avatarPosX, avatarPosY: me.avatarPosY };
+            const all = Object.values(profileMap).sort((a, b) => (a.name || '').localeCompare(b.name || '', 'zh-Hant'));
             if (!q) return all;
             return all.filter(u =>
-                u.name.toLowerCase().includes(q) ||
+                (u.name || '').toLowerCase().includes(q) ||
                 (u.email || '').toLowerCase().includes(q)
             );
         });
 
         const leaderboard = computed(() => {
-            // 計算每位使用者收到感謝的次數
+            // 合併 allProfiles + 自己
+            const profileMap = {};
+            allProfiles.value.forEach(p => { profileMap[p.id] = p; });
+            const me = users.value.find(u => u.id === currentUserId.value);
+            if (me) profileMap[me.id] = me;
+            const allUsers = Object.values(profileMap);
+            // 計算感謝封數
             const countMap = {};
-            users.value.forEach(u => { countMap[u.id] = 0; });
+            allUsers.forEach(u => { countMap[u.id] = 0; });
             letters.value.forEach(l => { if (countMap[l.to] !== undefined) countMap[l.to]++; });
-            return [...users.value]
+            return allUsers
                 .map(u => ({ ...u, thankCount: countMap[u.id] || 0 }))
                 .sort((a, b) => b.thankCount - a.thankCount);
         });
@@ -2693,9 +2718,21 @@ createApp({
                     letters: JSON.parse(JSON.stringify(letters.value)),
                     updatedAt: Date.now()
                 });
-            } catch(e) {
-                // 靜默失敗，不打擾使用者
-            }
+                // 同步更新公開 profile（頭像、名稱等）
+                const me = users.value.find(u => u.id === uid);
+                if (me) {
+                    await db.collection('profiles').doc(uid).set({
+                        id: uid,
+                        name: me.name || fbUser.value.displayName || '島民',
+                        email: me.email || fbUser.value.email || '',
+                        avatarUrl:  me.avatarUrl  || '',
+                        avatarPosX: me.avatarPosX ?? 50,
+                        avatarPosY: me.avatarPosY ?? 50,
+                        energy:     me.energy || 0,
+                        updatedAt:  Date.now(),
+                    }, { merge: true });
+                }
+            } catch(e) {}
         };
 
         const saveTiles = async () => {
@@ -2739,30 +2776,49 @@ createApp({
                     currentUserId.value = uid;
                     await saveData();
 
-                    // 新帳號歡迎公告：寫入 Firestore announcements
+                    // 新帳號歡迎公告
                     try {
                         await db.collection('announcements').add({
-                            type: 'welcome',
-                            uid,
+                            type: 'welcome', uid,
                             name: fbUser.value.displayName || '新島民',
                             photoURL: fbUser.value.photoURL || '',
                             timestamp: Date.now(),
                         });
                     } catch(_) {}
                 }
+
+                // ── 寫入/更新自己的公開 profile（每次登入同步）──
+                try {
+                    const me = users.value.find(u => u.id === uid);
+                    await db.collection('profiles').doc(uid).set({
+                        id: uid,
+                        name: me?.name || fbUser.value.displayName || '島民',
+                        email: me?.email || fbUser.value.email || '',
+                        avatarUrl:  me?.avatarUrl  || fbUser.value.photoURL || '',
+                        avatarPosX: me?.avatarPosX ?? 50,
+                        avatarPosY: me?.avatarPosY ?? 50,
+                        energy:     me?.energy || 0,
+                        tileCount:  me?.tileCount || 6,
+                        updatedAt:  Date.now(),
+                    }, { merge: true });
+                } catch(_) {}
+
+                // ── 讀取所有使用者的公開 profile（給 Sea 群島用）──
+                try {
+                    const snap = await db.collection('profiles').get();
+                    allProfiles.value = snap.docs.map(d => d.data());
+                } catch(_) {}
+
                 // 設定當前使用者
                 const me = users.value.find(u => u.id === uid);
                 if (me) currentUserId.value = uid;
-                else {
-                    currentUserId.value = users.value[0]?.id || uid;
-                }
+                else currentUserId.value = users.value[0]?.id || uid;
 
                 // 載入地形（從 Firestore）
                 try {
                     const tilesDoc = await db.collection('tiles').doc(uid).get();
                     if (tilesDoc.exists && tilesDoc.data().tiles?.length) {
                         window.islandEngine?.importTiles(tilesDoc.data().tiles);
-                        // 地形載入後重新置中
                         setTimeout(() => window.islandEngine?.center(), 200);
                     }
                 } catch(_te) {}
@@ -3542,6 +3598,7 @@ createApp({
             currentTab, letterForm, shopItems, displayIslandItems,
             visitingId, leaderboard, errorMsg, isDrawing, drawResult,
             seaTab, seaSearch, seaFilteredUsers, seaUserStats,
+            allProfiles, getProfileAvatar,
             announcements,
             animalStates, jumpStates, myLetters, unreadCount,
             getUserById, getDisplayName, getDisplayInitial, getUserAvatar, formatDate,
