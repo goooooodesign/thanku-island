@@ -537,25 +537,57 @@ input[type=range]{flex:1;accent-color:var(--pri)}
         <input v-model="itemForm.emoji" class="fi" placeholder="例如：🐕" style="font-size:24px;max-width:120px">
       </div>
 
-      <!-- 圖片上傳區（Cloudinary，待整合） -->
+      <!-- 圖片上傳 -->
       <div class="fr">
-        <label class="fl">圖片 <span style="color:var(--sub);font-weight:400">（選填，上傳後自動使用；沒有則顯示 emoji）</span></label>
-        <div class="img-upload-area" @click="$refs.imgFileInput.click()">
-          <input ref="imgFileInput" type="file" accept="image/*" style="display:none" @change="onItemImgChange">
-          <div v-if="itemForm.imgUrl">
-            <img :src="itemForm.imgUrl" class="img-preview">
-            <div style="font-size:12px;color:var(--sub)">點擊更換圖片</div>
+        <label class="fl">圖片上傳</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+
+          <!-- 靜止圖 -->
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px">靜止圖 <span style="font-weight:400">256×256px</span></div>
+            <div class="img-upload-area" @click="$refs.imgFileInput.click()" style="padding:16px">
+              <input ref="imgFileInput" type="file" accept="image/*" style="display:none" @change="onItemImgChange('idle',$event)">
+              <div v-if="itemForm.imgUrl">
+                <img :src="itemForm.imgUrl" class="img-preview" style="width:64px;height:64px">
+                <div style="font-size:11px;color:var(--sub);margin-top:4px">點擊更換</div>
+              </div>
+              <div v-else>
+                <div style="font-size:28px;margin-bottom:4px">🖼️</div>
+                <div style="font-size:12px;font-weight:700;color:var(--sub)">點擊上傳</div>
+              </div>
+              <div v-if="imgUploading==='idle'" style="position:absolute;inset:0;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;border-radius:var(--r);font-weight:700;color:var(--pri);font-size:12px">上傳中...</div>
+            </div>
+            <div v-if="itemForm.imgUrl" style="margin-top:6px;display:flex;gap:6px;align-items:center">
+              <button @click="copyUrl(itemForm.imgUrl)" class="gc-btn gc-edit" style="font-size:11px;flex:1">📋 複製 URL</button>
+              <button @click="itemForm.imgUrl=''" class="gc-btn gc-del" style="font-size:11px">✕</button>
+            </div>
+            <div v-if="copiedMsg==='idle'" style="font-size:11px;color:var(--pri);margin-top:4px;font-weight:700">✅ 已複製！</div>
           </div>
-          <div v-else>
-            <div style="font-size:32px;margin-bottom:6px">📁</div>
-            <div style="font-size:13px;font-weight:700;color:var(--sub)">點擊上傳圖片</div>
-            <div style="font-size:11px;color:var(--sub);margin-top:3px">PNG / JPG，建議 256×256px</div>
+
+          <!-- Sprite Sheet -->
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px">走路動畫 <span style="font-weight:400">1280×256px，4幀橫排</span></div>
+            <div class="img-upload-area" @click="$refs.spriteFileInput.click()" style="padding:16px">
+              <input ref="spriteFileInput" type="file" accept="image/png" style="display:none" @change="onItemImgChange('sprite',$event)">
+              <div v-if="itemForm.spriteUrl">
+                <img :src="itemForm.spriteUrl" style="width:100%;height:40px;object-fit:cover;border-radius:4px;border:1px solid var(--border)">
+                <div style="font-size:11px;color:var(--sub);margin-top:4px">點擊更換</div>
+              </div>
+              <div v-else>
+                <div style="font-size:28px;margin-bottom:4px">🎞️</div>
+                <div style="font-size:12px;font-weight:700;color:var(--sub)">點擊上傳雪碧圖</div>
+              </div>
+              <div v-if="imgUploading==='sprite'" style="position:absolute;inset:0;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;border-radius:var(--r);font-weight:700;color:var(--pri);font-size:12px">上傳中...</div>
+            </div>
+            <div v-if="itemForm.spriteUrl" style="margin-top:6px;display:flex;gap:6px;align-items:center">
+              <button @click="copyUrl(itemForm.spriteUrl)" class="gc-btn gc-edit" style="font-size:11px;flex:1">📋 複製 URL</button>
+              <button @click="itemForm.spriteUrl=''" class="gc-btn gc-del" style="font-size:11px">✕</button>
+            </div>
+            <div v-if="copiedMsg==='sprite'" style="font-size:11px;color:var(--pri);margin-top:4px;font-weight:700">✅ 已複製！</div>
           </div>
-          <div v-if="imgUploading" style="position:absolute;inset:0;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;border-radius:var(--r);font-weight:700;color:var(--pri)">上傳中...</div>
+
         </div>
-        <div v-if="itemForm.imgUrl" style="margin-top:6px">
-          <button @click="itemForm.imgUrl=''" style="font-size:12px;color:var(--red);font-weight:700;cursor:pointer;border:none;background:none;padding:0">✕ 移除圖片</button>
-        </div>
+        <div style="font-size:11px;color:var(--sub);margin-top:8px">💡 靜止時顯示靜止圖，移動時自動切換走路動畫。沒有圖片則顯示 emoji。</div>
       </div>
 
       <div class="fr">
@@ -772,9 +804,10 @@ createApp({setup(){
   const gachaLoading = ref(false);
   const showItemForm = ref(false);
   const editingItem  = ref(null);
-  const imgUploading = ref(false);
+  const imgUploading = ref('');   // '' | 'idle' | 'sprite'
+  const copiedMsg    = ref('');   // '' | 'idle' | 'sprite'
   const itemForm = Vue.reactive({
-    name:'', emoji:'', imgUrl:'', type:'animal',
+    name:'', emoji:'', imgUrl:'', spriteUrl:'', type:'animal',
     poolId:'animal', rarity:'common', weight:30, active:true,
   });
   const showPoolForm = ref(false);
@@ -816,16 +849,16 @@ createApp({setup(){
   // 物品 CRUD
   const openNewItem = () => {
     editingItem.value = null;
-    // 預設 poolId 跟著目前選取的卡池
     const pid = currentPool.value;
     const defaultType = pid==='animal'?'animal':pid==='decor'?'decor':'animal';
-    Object.assign(itemForm,{name:'',emoji:'',imgUrl:'',type:defaultType,poolId:pid,rarity:'common',weight:30,active:true});
+    Object.assign(itemForm,{name:'',emoji:'',imgUrl:'',spriteUrl:'',type:defaultType,poolId:pid,rarity:'common',weight:30,active:true});
     showItemForm.value = true;
   };
   const openEditItem = (item) => {
     editingItem.value = item;
     Object.assign(itemForm,{
-      name:item.name, emoji:item.emoji, imgUrl:item.imgUrl||'',
+      name:item.name, emoji:item.emoji,
+      imgUrl:item.imgUrl||'', spriteUrl:item.spriteUrl||'',
       type:item.type, poolId:item.poolId||(item.type==='animal'?'animal':'decor'),
       rarity:item.rarity, weight:item.weight, active:item.active,
     });
@@ -835,14 +868,14 @@ createApp({setup(){
     if(!itemForm.name.trim()||!itemForm.emoji.trim()) return;
     const data = {
       name:itemForm.name.trim(), emoji:itemForm.emoji.trim(),
-      imgUrl:itemForm.imgUrl||'', type:itemForm.type,
-      poolId:itemForm.poolId, rarity:itemForm.rarity,
-      weight:Number(itemForm.weight)||30, active:itemForm.active,
+      imgUrl:itemForm.imgUrl||'', spriteUrl:itemForm.spriteUrl||'',
+      type:itemForm.type, poolId:itemForm.poolId,
+      rarity:itemForm.rarity, weight:Number(itemForm.weight)||30,
+      active:itemForm.active,
     };
     try {
       if(editingItem.value) {
         await db.collection('gacha_items').doc(editingItem.value.id).update(data);
-        // 本地同步
         const idx = gachaItems.value.findIndex(i=>i.id===editingItem.value.id);
         if(idx>=0) gachaItems.value[idx] = {...gachaItems.value[idx],...data};
         toast('✅ 已更新 '+data.name);
@@ -853,6 +886,15 @@ createApp({setup(){
       }
       showItemForm.value = false;
     } catch(e){ toast('儲存失敗','err'); console.error(e); }
+  };
+
+  // 複製 URL
+  const copyUrl = async (url, type) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      copiedMsg.value = type;
+      setTimeout(()=>{ copiedMsg.value=''; }, 2000);
+    } catch(e){ toast('複製失敗','err'); }
   };
   const toggleActive = async (item) => {
     try {
@@ -870,32 +912,33 @@ createApp({setup(){
     } catch(e){ toast('刪除失敗','err'); }
   };
 
-  // 圖片上傳（Cloudinary）
+  // Cloudinary 設定
   const CLOUDINARY_CLOUD = 'djjbj67s5';
   const CLOUDINARY_PRESET = 'gsik1r4i';
-  const onItemImgChange = async (e) => {
+
+  // 圖片上傳（支援靜止圖 idle 和雪碧圖 sprite）
+  const onItemImgChange = async (type, e) => {
     const file = e.target.files[0];
     if(!file) return;
-    if(!CLOUDINARY_CLOUD || !CLOUDINARY_PRESET) {
-      // Cloudinary 未設定：使用 base64 預覽（暫時方案）
-      const reader = new FileReader();
-      reader.onload = ev => { itemForm.imgUrl = ev.target.result; };
-      reader.readAsDataURL(file);
-      toast('⚠️ Cloudinary 未設定，使用暫時預覽（儲存後可能無法顯示）');
-      return;
-    }
-    imgUploading.value = true;
+    e.target.value = '';
+    imgUploading.value = type;
     try {
       const fd = new FormData();
       fd.append('file', file);
       fd.append('upload_preset', CLOUDINARY_PRESET);
       const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {method:'POST',body:fd});
       const data = await res.json();
-      itemForm.imgUrl = data.secure_url;
-      toast('✅ 圖片已上傳！');
-    } catch(e){ toast('圖片上傳失敗','err'); }
-    imgUploading.value = false;
-    e.target.value = '';
+      if(data.secure_url) {
+        if(type==='idle') itemForm.imgUrl = data.secure_url;
+        else              itemForm.spriteUrl = data.secure_url;
+        toast('✅ 圖片已上傳！');
+      } else {
+        toast('上傳失敗：'+JSON.stringify(data),'err');
+      }
+    } catch(e){
+      toast('圖片上傳失敗','err');
+    }
+    imgUploading.value = '';
   };
 
   // 特別卡池 CRUD
@@ -1005,7 +1048,7 @@ createApp({setup(){
   const doAnn=async()=>{sending.value=true;try{await db.collection('announcements').add({type:'admin',title:aTitle.value.trim(),content:aContent.value.trim(),timestamp:Date.now(),fromName:'感恩小島官方'});toast('✅ 全站公告已發送！');aShow.value=false;aTitle.value='';aContent.value='';await loadData();}catch(e){toast('發送失敗','err');}sending.value=false;};
   const markRead=async(fb)=>{try{await db.collection('feedback').doc(fb.id).update({read:true});fb.read=true;}catch(e){}};
   const delFb=async(fb)=>{if(!confirm('確定刪除？'))return;try{await db.collection('feedback').doc(fb.id).delete();feedbacks.value=feedbacks.value.filter(f=>f.id!==fb.id);toast('已刪除');}catch(e){toast('刪除失敗','err');}};
-  return{fbUser,isAdmin,loading,lerr,tab,tabs,sending,profiles,feedbacks,anns,adminAnns,wl,stats,toasts,prevImg,rTarget,selUsers,uQ,rType,rAmt,rNote,rShow,rtypes,selectedItem,itemSearch,filtItems,aTitle,aContent,aShow,newWL,fbF,filtP,filtFb,unreadFb,gachaItems,specialPools,currentPool,gachaSearch,gachaLoading,showItemForm,editingItem,imgUploading,itemForm,showPoolForm,editingPool,poolForm,rarityOpts,filtGachaItems,signIn,signOut,fmtDate,gname,toggleU,addWL,rmWL,openRC,doReward,openAC,doAnn,markRead,delFb,openNewItem,openEditItem,saveItem,toggleActive,deleteItem,onItemImgChange,openEditPool,savePool,deletePool};
+  return{fbUser,isAdmin,loading,lerr,tab,tabs,sending,profiles,feedbacks,anns,adminAnns,wl,stats,toasts,prevImg,rTarget,selUsers,uQ,rType,rAmt,rNote,rShow,rtypes,selectedItem,itemSearch,filtItems,aTitle,aContent,aShow,newWL,fbF,filtP,filtFb,unreadFb,gachaItems,specialPools,currentPool,gachaSearch,gachaLoading,showItemForm,editingItem,imgUploading,copiedMsg,itemForm,showPoolForm,editingPool,poolForm,rarityOpts,filtGachaItems,signIn,signOut,fmtDate,gname,toggleU,addWL,rmWL,openRC,doReward,openAC,doAnn,markRead,delFb,openNewItem,openEditItem,saveItem,toggleActive,deleteItem,onItemImgChange,copyUrl,openEditPool,savePool,deletePool};
 }}).mount('#app');
 </script>
 </body>
