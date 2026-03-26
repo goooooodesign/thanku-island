@@ -639,7 +639,7 @@ input[type=range]{flex:1;accent-color:var(--pri)}
 
       <div style="display:flex;gap:10px;margin-top:8px">
         <button class="btn bg" @click="showItemForm=false" style="flex:1">取消</button>
-        <button class="btn bp" @click="saveItem" :disabled="!itemForm.name.trim()||!itemForm.emoji.trim()||imgUploading" style="flex:2">
+        <button class="btn bp" @click="saveItem" :disabled="!itemForm.name.trim()||!itemForm.emoji.trim()||(imgUploading!=='')" style="flex:2">
           <i class="fa-solid fa-floppy-disk"></i>
           {{ editingItem ? '儲存變更' : '新增到卡池' }}
         </button>
@@ -937,8 +937,9 @@ createApp({setup(){
       }
     } catch(e){
       toast('圖片上傳失敗','err');
+    } finally {
+      imgUploading.value = '';
     }
-    imgUploading.value = '';
   };
 
   // 特別卡池 CRUD
