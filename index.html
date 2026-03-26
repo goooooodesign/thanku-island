@@ -2922,6 +2922,48 @@ createApp({
             }
         };
 
+        // ── 同步物品圖片 ──
+        // 登入後用 Firestore 最新的 imgUrl / spriteUrl 更新倉庫和島上的舊物品
+        // 比對方式：物品名稱相符就更新圖片（不影響位置、稀有度等其他資料）
+        const syncItemImages = () => {
+            const me = users.value.find(u => u.id === currentUserId.value);
+            if (!me) return;
+
+            // 建立名稱 → 最新圖片的對照表
+            const imgMap = {};
+            [...gachaPool.value, ...shopItems.value].forEach(g => {
+                if (g.name) {
+                    imgMap[g.name] = {
+                        imgUrl:    g.imgUrl    || '',
+                        spriteUrl: g.spriteUrl || '',
+                    };
+                }
+            });
+
+            let changed = false;
+
+            // 更新倉庫
+            (me.warehouse || []).forEach(item => {
+                const latest = imgMap[item.name];
+                if (latest) {
+                    if (item.imgUrl    !== latest.imgUrl)    { item.imgUrl    = latest.imgUrl;    changed = true; }
+                    if (item.spriteUrl !== latest.spriteUrl) { item.spriteUrl = latest.spriteUrl; changed = true; }
+                }
+            });
+
+            // 更新島上
+            (me.island || []).forEach(item => {
+                const latest = imgMap[item.name];
+                if (latest) {
+                    if (item.imgUrl    !== latest.imgUrl)    { item.imgUrl    = latest.imgUrl;    changed = true; }
+                    if (item.spriteUrl !== latest.spriteUrl) { item.spriteUrl = latest.spriteUrl; changed = true; }
+                }
+            });
+
+            // 有任何更新才存檔
+            if (changed) saveData();
+        };
+
         // ===== 狀態 =====
         const users         = ref(JSON.parse(JSON.stringify(defaultUsers)));
         const letters       = ref([]);
@@ -4476,6 +4518,7 @@ createApp({
                     await loadAnnouncements();
                     await loadGlobalLetters();
                     await loadGachaItems();
+                    syncItemImages(); // 用最新卡池圖片更新倉庫和島上的舊物品
                     initAnimalStates();
                     if (!roamInterval) roamInterval = setInterval(moveAnimals, 4500);
                     setTimeout(() => {
