@@ -397,6 +397,15 @@
         .float-item img { width: 96px; height: 96px; object-fit: contain; filter: drop-shadow(0 3px 8px rgba(0,0,0,0.12)); }
         .float-item .emoji-icon { font-size: 56px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); line-height: 1; }
 
+        /* ── Sprite Sheet 動畫 ── */
+        .sprite-anim {
+            width: 96px; height: 96px;
+            background-repeat: no-repeat;
+            background-size: auto 96px; /* 高度固定 96px，寬度自動縮放 */
+            filter: drop-shadow(0 3px 8px rgba(0,0,0,0.12));
+            image-rendering: pixelated;
+        }
+
         /* 跳躍動畫（上高地/下高地）*/
         @keyframes highland-jump-up {
             0%   { transform: translateY(0) scale(1); }
@@ -1901,7 +1910,16 @@
                                 transition: isDragging(item.id) ? 'none' : 'transform 0.4s ease',
                                 transformOrigin: 'center bottom'
                             }">
-                                <img v-if="item.imgUrl" :src="item.imgUrl" @error="handleImageError(item)" :alt="item.name">
+                                <!-- Sprite Sheet 動畫（有 spriteUrl 且正在移動時） -->
+                                <div v-if="item.type==='animal' && item.spriteUrl && animalStates[item.id]?.moving"
+                                    class="sprite-anim"
+                                    :style="{
+                                        backgroundImage: 'url('+item.spriteUrl+')',
+                                        backgroundPositionX: '-'+(( spriteFrames[item.id]||0 )*96)+'px'
+                                    }">
+                                </div>
+                                <!-- 靜止圖（有 spriteUrl 時用 imgUrl 當靜止，無 spriteUrl 就一般顯示） -->
+                                <img v-else-if="item.imgUrl" :src="item.imgUrl" @error="handleImageError(item)" :alt="item.name">
                                 <span v-else class="emoji-icon">{{ item.emoji }}</span>
                             </div>
                             <div v-if="isEditMode" class="item-edit-btns">
@@ -3213,6 +3231,25 @@ createApp({
                 }
             });
         };
+        const spriteFrames  = ref({}); // itemId -> 目前幀 0-3
+        const spriteTimers  = {};      // itemId -> setInterval handle
+
+        const startSpriteAnim = (itemId) => {
+            if (spriteTimers[itemId]) return; // 已在跑
+            spriteFrames.value[itemId] = 0;
+            spriteTimers[itemId] = setInterval(() => {
+                spriteFrames.value[itemId] = ((spriteFrames.value[itemId] || 0) + 1) % 4;
+            }, 160); // 每幀 160ms，4幀一循環 ≈ 0.64秒
+        };
+
+        const stopSpriteAnim = (itemId) => {
+            if (spriteTimers[itemId]) {
+                clearInterval(spriteTimers[itemId]);
+                delete spriteTimers[itemId];
+            }
+            spriteFrames.value[itemId] = 0;
+        };
+
         const moveAnimals = () => {
             if (currentTab.value !== 'home') return;
             displayIslandItems.value.forEach(item => {
@@ -3231,6 +3268,19 @@ createApp({
                         animalStates.value[item.id].x    = newX;
                         animalStates.value[item.id].y    = newY;
                         animalStates.value[item.id].flip = newX > oldX;
+
+                        // 有 spriteUrl 才啟動走路動畫
+                        if (item.spriteUrl) {
+                            animalStates.value[item.id].moving = true;
+                            startSpriteAnim(item.id);
+                            // 4秒後（CSS transition 結束）切回靜止
+                            setTimeout(() => {
+                                if (animalStates.value[item.id]) {
+                                    animalStates.value[item.id].moving = false;
+                                }
+                                stopSpriteAnim(item.id);
+                            }, 4000);
+                        }
 
                         // 偵測高地變化，觸發跳躍動畫
                         const newHL = getTerrainAt(newX, newY).hl || 0;
@@ -4451,7 +4501,7 @@ createApp({
             seaTab, seaSearch, seaFilteredUsers, seaUserStats,
             allProfiles, getProfileAvatar,
             announcements, globalLetters,
-            animalStates, jumpStates, myLetters, unreadCount,
+            animalStates, jumpStates, spriteFrames, myLetters, unreadCount,
             getUserById, getDisplayName, getDisplayInitial, getUserAvatar, getLetterName, formatDate,
             switchUser, visitUser, stopVisiting, switchTab,
             sendLetter, adjustCardCost, markAsRead, toggleLike, isLiked,
