@@ -3275,13 +3275,18 @@ createApp({
         };
         const spriteFrames  = ref({}); // itemId -> 目前幀 0-3
         const spriteTimers  = {};      // itemId -> setInterval handle
+        const movingTimers  = {};      // itemId -> setTimeout handle（moving 狀態計時器）
 
         const startSpriteAnim = (itemId) => {
-            if (spriteTimers[itemId]) return; // 已在跑
+            // 先清掉舊的 interval，避免疊加
+            if (spriteTimers[itemId]) {
+                clearInterval(spriteTimers[itemId]);
+                delete spriteTimers[itemId];
+            }
             spriteFrames.value[itemId] = 0;
             spriteTimers[itemId] = setInterval(() => {
                 spriteFrames.value[itemId] = ((spriteFrames.value[itemId] || 0) + 1) % 4;
-            }, 160); // 每幀 160ms，4幀一循環 ≈ 0.64秒
+            }, 160);
         };
 
         const stopSpriteAnim = (itemId) => {
@@ -3290,6 +3295,31 @@ createApp({
                 delete spriteTimers[itemId];
             }
             spriteFrames.value[itemId] = 0;
+        };
+
+        // 設定移動狀態，並在 CSS transition 結束後自動切回靜止
+        const setMoving = (item) => {
+            if (!item.spriteUrl) return;
+            const id = item.id;
+
+            // 清掉舊的停止計時器，避免提早關閉
+            if (movingTimers[id]) {
+                clearTimeout(movingTimers[id]);
+                delete movingTimers[id];
+            }
+
+            // 強制設為移動狀態並啟動動畫
+            animalStates.value[id].moving = true;
+            startSpriteAnim(id);
+
+            // CSS transition 是 4s，等 4.1s 後確認停止
+            movingTimers[id] = setTimeout(() => {
+                if (animalStates.value[id]) {
+                    animalStates.value[id].moving = false;
+                }
+                stopSpriteAnim(id);
+                delete movingTimers[id];
+            }, 4100);
         };
 
         const moveAnimals = () => {
@@ -3311,18 +3341,8 @@ createApp({
                         animalStates.value[item.id].y    = newY;
                         animalStates.value[item.id].flip = newX > oldX;
 
-                        // 有 spriteUrl 才啟動走路動畫
-                        if (item.spriteUrl) {
-                            animalStates.value[item.id].moving = true;
-                            startSpriteAnim(item.id);
-                            // 4秒後（CSS transition 結束）切回靜止
-                            setTimeout(() => {
-                                if (animalStates.value[item.id]) {
-                                    animalStates.value[item.id].moving = false;
-                                }
-                                stopSpriteAnim(item.id);
-                            }, 4000);
-                        }
+                        // 移動時切換到雪碧圖動畫，結束後強制回靜止圖
+                        setMoving(item);
 
                         // 偵測高地變化，觸發跳躍動畫
                         const newHL = getTerrainAt(newX, newY).hl || 0;
