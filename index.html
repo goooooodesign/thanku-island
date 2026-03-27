@@ -799,6 +799,18 @@
 
         /* ===== Wall 佈告欄 ===== */
         .wall-hero { text-align:center; padding: 24px 0 20px; }
+        /* 時間篩選列 */
+        .time-filter-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; padding: 0 2px; }
+        .tf-btn {
+            padding: 6px 14px; border-radius: var(--radius-pill);
+            border: 1.5px solid var(--border); background: var(--surface);
+            font-size: 12px; font-weight: 700; color: var(--text-sub);
+            cursor: pointer; transition: all 0.15s; white-space: nowrap;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .tf-btn:hover { border-color: var(--primary); color: var(--primary-h); background: var(--primary-lt); }
+        .tf-btn.on { background: var(--primary); color: #fff; border-color: var(--primary-h); }
+        .tf-btn.unread-btn.on { background: var(--accent); border-color: #C97E50; }
         .wall-hero-deco { font-size: 20px; margin-bottom: 4px; letter-spacing: 6px; }
         .wall-hero-title { font-size: 22px; font-weight: 900; color: var(--text); letter-spacing: -0.02em; }
         .wall-hero-sub { font-size: 13px; color: var(--text-sub); margin-top: 4px; font-weight: 600; }
@@ -2279,18 +2291,21 @@
                     <h2 class="wall-hero-title">佈告欄</h2>
                     <p class="wall-hero-sub">大家的感謝都在這裡 🏝️</p>
                 </div>
-                <div v-if="sortedLetters.length === 0" class="empty-state">
+
+                <!-- 時間篩選 -->
+                <div class="time-filter-bar">
+                    <button v-for="f in [{id:'all',l:'全部'},{id:'today',l:'今天'},{id:'week',l:'本週'},{id:'month',l:'本月'},{id:'last_month',l:'上個月'}]"
+                        :key="f.id" class="tf-btn" :class="{on:wallFilter===f.id}"
+                        @click="wallFilter=f.id">{{ f.l }}</button>
+                </div>
+
+                <div v-if="filteredGlobalLetters.length === 0" class="empty-state">
                     <div style="font-size:48px;margin-bottom:12px;">🌊</div>
-                    <div>還沒有任何感謝訊息</div>
+                    <div>{{ wallFilter==='all' ? '還沒有任何感謝訊息' : '這個時間範圍內沒有感謝訊息' }}</div>
                     <div style="font-size:12px;margin-top:6px;color:var(--text-sub)">成為第一個傳遞感謝的人吧！</div>
                 </div>
                 <div v-else class="wall-grid">
-                    <div v-if="globalLetters.length === 0" class="empty-state">
-                        <div style="font-size:48px;margin-bottom:12px;">🌊</div>
-                        <div>還沒有感謝故事</div>
-                        <div style="font-size:12px;margin-top:6px;color:var(--text-sub)">成為第一個說感謝的人吧！💌</div>
-                    </div>
-                    <div v-for="letter in globalLetters" :key="letter.id" class="wall-card">
+                    <div v-for="letter in filteredGlobalLetters" :key="letter.id" class="wall-card">
                         <div class="wall-card-top">
                             <div class="wall-avatars">
                                 <div class="wall-avatar from">
@@ -2418,13 +2433,19 @@
 
                 <!-- 感謝信 -->
                 <div v-if="inboxTab==='letter'">
-                    <div v-if="myLetters.length === 0" class="empty-state">
+                    <!-- 時間篩選 -->
+                    <div class="time-filter-bar" style="margin-bottom:14px">
+                        <button v-for="f in [{id:'all',l:'全部'},{id:'unread',l:'未讀 ✉️'},{id:'today',l:'今天'},{id:'week',l:'本週'},{id:'month',l:'本月'},{id:'last_month',l:'上個月'}]"
+                            :key="f.id" class="tf-btn" :class="{on:inboxLetterFilter===f.id,'unread-btn':f.id==='unread'}"
+                            @click="inboxLetterFilter=f.id">{{ f.l }}</button>
+                    </div>
+                    <div v-if="filteredMyLetters.length === 0" class="empty-state">
                         <div style="font-size:48px;margin-bottom:12px;">📭</div>
-                        <div>還沒有收到感謝信</div>
+                        <div>{{ inboxLetterFilter==='unread' ? '沒有未讀信件' : inboxLetterFilter==='all' ? '還沒有收到感謝信' : '這個時間範圍內沒有信件' }}</div>
                         <div style="font-size:12px;margin-top:6px;color:var(--text-sub)">把感謝傳出去，好事就會回來的 🌿</div>
                     </div>
                     <div v-else class="letters-grid">
-                        <div v-for="letter in myLetters" :key="letter.id"
+                        <div v-for="letter in filteredMyLetters" :key="letter.id"
                              @click="openLetterModal(letter)"
                              class="letter-card" :class="{ unread: !letter.read }" style="cursor:pointer;">
                             <div class="letter-header">
@@ -3009,6 +3030,48 @@ createApp({
         const otherUsers = computed(() =>
             users.value.filter(u => u.id !== currentUserId.value)
         );
+        // ── 時間篩選工具函式 ──
+        const timeFilterFn = (filter, timestamp) => {
+            if (filter === 'all') return true;
+            const now = Date.now();
+            const d = new Date();
+            if (filter === 'unread') return false; // 由各自的 computed 處理
+            if (filter === 'today') {
+                const start = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+                return timestamp >= start;
+            }
+            if (filter === 'week') {
+                const start = now - 7 * 24 * 60 * 60 * 1000;
+                return timestamp >= start;
+            }
+            if (filter === 'month') {
+                const start = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+                return timestamp >= start;
+            }
+            if (filter === 'last_month') {
+                const start = new Date(d.getFullYear(), d.getMonth() - 1, 1).getTime();
+                const end   = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+                return timestamp >= start && timestamp < end;
+            }
+            return true;
+        };
+
+        // 佈告欄篩選
+        const wallFilter = ref('all');
+        const filteredGlobalLetters = computed(() => {
+            let list = [...globalLetters.value];
+            if (wallFilter.value === 'all') return list;
+            return list.filter(l => timeFilterFn(wallFilter.value, l.timestamp));
+        });
+
+        // 信箱感謝信篩選
+        const inboxLetterFilter = ref('all');
+        const filteredMyLetters = computed(() => {
+            let list = myLetters.value;
+            if (inboxLetterFilter.value === 'unread') return list.filter(l => !l.read);
+            return list.filter(l => timeFilterFn(inboxLetterFilter.value, l.timestamp));
+        });
+
         const sortedLetters = computed(() =>
             [...letters.value].sort((a, b) => b.timestamp - a.timestamp)
         );
@@ -4599,7 +4662,7 @@ createApp({
             recipientInput, showSuggestions, filteredSuggestions,
             onRecipientInput, selectRecipient, hideSuggestions,
             buyItem: () => {}, triggerGacha, triggerGacha10, finishDraw, finishDraw10, draw10Results, handleImageError, forceReset,
-            sortedLetters, getPos,
+            sortedLetters, wallFilter, filteredGlobalLetters, inboxLetterFilter, filteredMyLetters, getPos,
             isDragging, onDragStart, onDragMove, onDragEnd, dragState,
             onIslandMouseDown, onIslandMouseMove, onIslandMouseUp, centerHomeIsland, camTick,
             tiles_used,
