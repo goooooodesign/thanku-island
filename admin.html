@@ -751,44 +751,13 @@ createApp({setup(){
   ];
 
   // 所有可發放的島民和裝飾品清單（與主網頁同步）
-  const allPets=[
-    {id:'p_hamster',name:'倉鼠',emoji:'🐹',rarity:'common',imgUrl:'assets/pets/pet_hamster.png',type:'animal'},
-    {id:'p_rabbit',name:'白兔',emoji:'🐇',rarity:'common',imgUrl:'assets/pets/pet_rabbit.png',type:'animal'},
-    {id:'p_shiba',name:'柴犬',emoji:'🐕',rarity:'common',imgUrl:'assets/pets/pet_shiba.png',type:'animal'},
-    {id:'p_chick',name:'小雞',emoji:'🐥',rarity:'common',imgUrl:'assets/pets/pet_chick.png',type:'animal'},
-    {id:'p_british',name:'英國短毛貓',emoji:'🐈',rarity:'rare',imgUrl:'assets/pets/pet_british_shorthair.png',type:'animal'},
-    {id:'p_penguin',name:'企鵝',emoji:'🐧',rarity:'rare',imgUrl:'assets/pets/pet_penguin.png',type:'animal'},
-    {id:'p_fox',name:'狐狸',emoji:'🦊',rarity:'rare',imgUrl:'assets/pets/pet_fox.png',type:'animal'},
-    {id:'p_unicorn',name:'獨角獸',emoji:'🦄',rarity:'legend',imgUrl:'assets/pets/pet_unicorn.png',type:'animal'},
-    {id:'p_sailor',name:'水手',emoji:'⚓',rarity:'legend',imgUrl:'assets/pets/pet_sailor.png',type:'animal'},
-    {id:'p_pony',name:'小馬',emoji:'🐴',rarity:'legend',imgUrl:'assets/pets/pet_pony.png',type:'animal'},
-  ];
-  const allDecors=[
-    {id:'t1',name:'橡木樹',emoji:'🌳',rarity:'common',imgUrl:'assets/items/tree_oak.png',type:'decor'},
-    {id:'t2',name:'雪松',emoji:'🌲',rarity:'common',imgUrl:'assets/items/tree_pine.png',type:'decor'},
-    {id:'t3',name:'櫻花樹',emoji:'🌸',rarity:'rare',imgUrl:'assets/items/tree_sakura.png',type:'decor'},
-    {id:'f1',name:'向日葵',emoji:'🌻',rarity:'common',imgUrl:'assets/items/flower_sunflower.png',type:'decor'},
-    {id:'f2',name:'雛菊',emoji:'🌼',rarity:'common',imgUrl:'assets/items/flower_daisy.png',type:'decor'},
-    {id:'f4',name:'蘑菇',emoji:'🍄',rarity:'common',imgUrl:'assets/items/plant_mushroom.png',type:'decor'},
-    {id:'d1',name:'露營帳篷',emoji:'⛺',rarity:'rare',imgUrl:'assets/items/build_tent.png',type:'decor'},
-    {id:'d4',name:'許願池',emoji:'⛲',rarity:'legend',imgUrl:'assets/items/build_fountain.png',type:'decor'},
-    {id:'s2',name:'野餐組合',emoji:'🧺',rarity:'common',imgUrl:'assets/items/deco_picnic.png',type:'decor'},
-    {id:'s3',name:'木製長椅',emoji:'🪑',rarity:'common',imgUrl:'assets/items/deco_bench.png',type:'decor'},
-    {id:'s4',name:'篝火堆',emoji:'🔥',rarity:'rare',imgUrl:'assets/items/deco_campfire.png',type:'decor'},
-    {id:'s5',name:'石燈籠',emoji:'🏮',rarity:'rare',imgUrl:'assets/items/deco_lantern.png',type:'decor'},
-    {id:'s6',name:'鯉魚旗',emoji:'🎏',rarity:'rare',imgUrl:'assets/items/deco_koinobori.png',type:'decor'},
-    {id:'s7',name:'野餐布',emoji:'🟩',rarity:'common',imgUrl:'assets/items/deco_picnic_mat.png',type:'decor'},
-    {id:'s8',name:'野餐籃',emoji:'🧺',rarity:'common',imgUrl:'assets/items/deco_picnic_basket.png',type:'decor'},
-    {id:'s9',name:'野餐摺疊椅',emoji:'🪑',rarity:'common',imgUrl:'assets/items/deco_folding_chair.png',type:'decor'},
-    {id:'s10',name:'陽傘',emoji:'☂️',rarity:'rare',imgUrl:'assets/items/deco_parasol.png',type:'decor'},
-    {id:'s11',name:'風車',emoji:'🌀',rarity:'common',imgUrl:'assets/items/deco_windmill.png',type:'decor'},
-    {id:'s12',name:'三明治',emoji:'🥪',rarity:'common',imgUrl:'assets/items/deco_sandwich.png',type:'decor'},
-    {id:'s13',name:'木製長桌',emoji:'🪵',rarity:'common',imgUrl:'assets/items/deco_wood_table.png',type:'decor'},
-    {id:'s14',name:'木製圓椅',emoji:'🪑',rarity:'common',imgUrl:'assets/items/deco_wood_stool.png',type:'decor'},
-    {id:'s15',name:'木製圓桌',emoji:'🪵',rarity:'common',imgUrl:'assets/items/deco_wood_round_table.png',type:'decor'},
-  ];
   const itemSearch=ref(''),selectedItem=ref(null);
-  const itemPool=computed(()=>rType.value==='pet'?allPets:rType.value==='decor'?allDecors:[]);
+  // 直接從已載入的 gachaItems 讀取，永遠是最新的
+  const itemPool=computed(()=>{
+    if(rType.value==='pet')   return gachaItems.value.filter(i=>i.type==='animal');
+    if(rType.value==='decor') return gachaItems.value.filter(i=>i.type==='decor');
+    return [];
+  });
   const filtItems=computed(()=>{
     const q=itemSearch.value.trim().toLowerCase();
     if(!q)return itemPool.value;
