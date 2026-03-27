@@ -246,12 +246,17 @@ input[type=range]{flex:1;accent-color:var(--pri)}
           <div class="ct"><i class="fa-solid fa-users"></i> 使用者清單</div>
           <div v-if="!profiles.length" class="empty"><div style="font-size:48px;margin-bottom:12px">👥</div><div style="font-size:14px;font-weight:600">暫無使用者</div></div>
           <table v-else class="tbl">
-            <thead><tr><th>使用者</th><th>信箱</th><th style="text-align:center">能量</th></tr></thead>
+            <thead><tr><th>使用者</th><th>信箱</th><th style="text-align:center">能量</th><th style="text-align:center">操作</th></tr></thead>
             <tbody>
               <tr v-for="p in profiles" :key="p.id">
                 <td><div style="display:flex;align-items:center;gap:8px"><div class="uav"><img v-if="p.avatarUrl" :src="p.avatarUrl"><span v-else>{{ (p.name||'?')[0] }}</span></div><span style="font-weight:700">{{ p.name }}</span></div></td>
                 <td style="color:var(--sub);font-size:12px">{{ p.email }}</td>
                 <td style="text-align:center;font-weight:700">⚡ {{ p.energy||0 }}</td>
+                <td style="text-align:center">
+                  <button class="btn bd bsm" @click="openDeleteUser(p)">
+                    <i class="fa-solid fa-trash"></i> 刪除
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -688,6 +693,26 @@ input[type=range]{flex:1;accent-color:var(--pri)}
     </div>
   </div>
 
+  <!-- 刪除使用者確認彈窗 -->
+  <div v-if="showDeleteModal" class="mov" @click.self="showDeleteModal=false">
+    <div class="mb">
+      <div class="mtt">🗑️ 刪除使用者</div>
+      <div class="mbd">
+        確定要刪除 <strong>{{ deleteTarget?.name }}</strong>（{{ deleteTarget?.email }}）的所有資料？<br><br>
+        ⚠️ 此操作會刪除該使用者的：<br>
+        · 個人資料、島嶼、倉庫、信件<br>
+        · 島嶼地形<br>
+        · 公開名片<br>
+        · 信箱內容<br><br>
+        <span style="color:var(--red);font-weight:800">刪除後無法復原。該帳號重新登入後會變成全新帳號。</span>
+      </div>
+      <div class="mbt">
+        <button class="btn bg" @click="showDeleteModal=false">取消</button>
+        <button class="btn bd" @click="confirmDeleteUser">🗑️ 確認刪除</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 發放確認 -->
   <div v-if="rShow" class="mov" @click.self="rShow=false">
     <div class="mb">
@@ -1018,7 +1043,40 @@ createApp({setup(){
   const doAnn=async()=>{sending.value=true;try{await db.collection('announcements').add({type:'admin',title:aTitle.value.trim(),content:aContent.value.trim(),timestamp:Date.now(),fromName:'感恩小島官方'});toast('✅ 全站公告已發送！');aShow.value=false;aTitle.value='';aContent.value='';await loadData();}catch(e){toast('發送失敗','err');}sending.value=false;};
   const markRead=async(fb)=>{try{await db.collection('feedback').doc(fb.id).update({read:true});fb.read=true;}catch(e){}};
   const delFb=async(fb)=>{if(!confirm('確定刪除？'))return;try{await db.collection('feedback').doc(fb.id).delete();feedbacks.value=feedbacks.value.filter(f=>f.id!==fb.id);toast('已刪除');}catch(e){toast('刪除失敗','err');}};
-  return{fbUser,isAdmin,loading,lerr,tab,tabs,sending,profiles,feedbacks,anns,adminAnns,wl,stats,toasts,prevImg,rTarget,selUsers,uQ,rType,rAmt,rNote,rShow,rtypes,selectedItem,itemSearch,filtItems,aTitle,aContent,aShow,newWL,fbF,filtP,filtFb,unreadFb,gachaItems,specialPools,currentPool,gachaSearch,gachaLoading,showItemForm,editingItem,imgUploading,copiedMsg,itemForm,showPoolForm,editingPool,poolForm,rarityOpts,filtGachaItems,signIn,signOut,fmtDate,gname,toggleU,addWL,rmWL,openRC,doReward,openAC,doAnn,markRead,delFb,openNewItem,openEditItem,saveItem,toggleActive,deleteItem,onItemImgChange,copyUrl,openEditPool,savePool,deletePool};
+
+  // ── 刪除使用者帳號 ──
+  const deleteTarget  = ref(null);
+  const showDeleteModal = ref(false);
+
+  const openDeleteUser = (p) => {
+    deleteTarget.value = p;
+    showDeleteModal.value = true;
+  };
+
+  const confirmDeleteUser = async () => {
+    const p = deleteTarget.value;
+    if(!p) return;
+    try {
+      const uid = p.id;
+      // 刪除所有 Firestore 資料
+      await Promise.allSettled([
+        db.collection('users').doc(uid).delete(),
+        db.collection('profiles').doc(uid).delete(),
+        db.collection('tiles').doc(uid).delete(),
+        // inbox subcollection
+        db.collection('inboxes').doc(uid).collection('items').get().then(snap =>
+          Promise.all(snap.docs.map(d => d.ref.delete()))
+        ),
+      ]);
+      // 從本地清單移除
+      profiles.value = profiles.value.filter(u => u.id !== uid);
+      stats.value.users = profiles.value.length;
+      toast(`🗑️ 已刪除 ${p.name} 的所有資料`);
+      showDeleteModal.value = false;
+      deleteTarget.value = null;
+    } catch(e){ toast('刪除失敗','err'); console.error(e); }
+  };
+  return{fbUser,isAdmin,loading,lerr,tab,tabs,sending,profiles,feedbacks,anns,adminAnns,wl,stats,toasts,prevImg,rTarget,selUsers,uQ,rType,rAmt,rNote,rShow,rtypes,selectedItem,itemSearch,filtItems,aTitle,aContent,aShow,newWL,fbF,filtP,filtFb,unreadFb,gachaItems,specialPools,currentPool,gachaSearch,gachaLoading,showItemForm,editingItem,imgUploading,copiedMsg,itemForm,showPoolForm,editingPool,poolForm,rarityOpts,filtGachaItems,deleteTarget,showDeleteModal,signIn,signOut,fmtDate,gname,toggleU,addWL,rmWL,openRC,doReward,openAC,doAnn,markRead,delFb,openNewItem,openEditItem,saveItem,toggleActive,deleteItem,onItemImgChange,copyUrl,openEditPool,savePool,deletePool,openDeleteUser,confirmDeleteUser};
 }}).mount('#app');
 </script>
 </body>
